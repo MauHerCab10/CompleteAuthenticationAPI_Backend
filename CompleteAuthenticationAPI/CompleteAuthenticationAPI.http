@@ -1,0 +1,6 @@
+@CompleteAuthenticationAPI_HostAddress = http://localhost:5208
+
+GET {{CompleteAuthenticationAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
