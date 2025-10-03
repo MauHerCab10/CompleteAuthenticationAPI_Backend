@@ -35,7 +35,6 @@ namespace Service.Implementacion
 
 
         #region Métodos Públicos
-
         //Genera el AccessToken y el RefreshToken, usando las credenciales de acceso del usuario
         public async Task<Respuesta<Usuario>> GenerarAccessTokenYRefreshTokenConCredenciales(LoginUsuarioDTO autorizacion)
         {
@@ -49,7 +48,9 @@ namespace Service.Implementacion
 
             await EliminarHistorialRefreshTokenAnteriores(usuarioEncontrado.Objeto.IdUsuario);
 
-            return await GuardarHistorialRefreshToken(usuarioEncontrado.Objeto.IdUsuario, accessTokenCreado, refreshTokenCreado);
+            var usuario = await GuardarHistorialRefreshToken(usuarioEncontrado.Objeto.IdUsuario, accessTokenCreado, refreshTokenCreado);
+
+            return usuario;
         }
 
 
@@ -66,7 +67,9 @@ namespace Service.Implementacion
 
             await EliminarHistorialRefreshTokenAnteriores(idUsuario);
 
-            return await GuardarHistorialRefreshToken(idUsuario, accessTokenCreado, refreshTokenCreado);
+            var usuario = await GuardarHistorialRefreshToken(idUsuario, accessTokenCreado, refreshTokenCreado);
+            
+            return usuario;
         }
 
 
@@ -76,30 +79,6 @@ namespace Service.Implementacion
             var refreshTokenEncontrado = await ConsultarUltimoHistorialRefreshTokensPorUsuario(idUsuario);
 
             return refreshTokenEncontrado == null ? null : refreshTokenEncontrado.FechaExpiracion;
-        }
-
-
-        //Elimina todo el historial de Tokens del usuario encontrado
-        public async Task<Respuesta<Usuario>> EliminarHistorialRefreshTokenAnteriores(int idUsuario)
-        {
-            var ultimoToken = await ConsultarUltimoHistorialRefreshTokensPorUsuario(idUsuario);
-
-            if (ultimoToken == null)
-            {
-                return new Respuesta<Usuario>
-                {
-                    IsSuccess = false,
-                    Mensaje = $"No existe ningún token activo del usuario '{idUsuario}' para eliminar."
-                };
-            }
-
-            var esExitoso = await EliminarHistorialRefreshTokensPorUsuario(idUsuario);
-
-            return new Respuesta<Usuario>
-            {
-                IsSuccess = esExitoso,
-                Mensaje = $"Se eliminó todo el historial de tokens del usuario {idUsuario} generados anteriormente y que ya estaban vencidos."
-            };
         }
 
 
@@ -113,7 +92,9 @@ namespace Service.Implementacion
 
             var tokenCreado = GenerarAccessToken(idUsuario.ToString());
 
-            return await ActualizaHistorialRefreshToken(accessToken, tokenCreado, refreshTokenEncontrado);
+            var usuario = await ActualizaHistorialRefreshToken(accessToken, tokenCreado, refreshTokenEncontrado);
+
+            return usuario;
         }
 
 
@@ -172,7 +153,6 @@ namespace Service.Implementacion
 
 
         #region Métodos Privados
-
         //Genera ÚNICAMENTE el AccesToken
         private string GenerarAccessToken(string idUsuario)
         {
@@ -273,6 +253,29 @@ namespace Service.Implementacion
             return new Respuesta<Usuario> { IsSuccess = true, Mensaje = "¡AccessToken actualizado OK!", Objeto = new Usuario { AccessToken = nuevoAccessToken, RefreshToken = historialExistente.RefreshToken } };
         }
 
+        //Elimina todo el historial de Tokens del usuario encontrado
+        private async Task<Respuesta<Usuario>> EliminarHistorialRefreshTokenAnteriores(int idUsuario)
+        {
+            var ultimoToken = await ConsultarUltimoHistorialRefreshTokensPorUsuario(idUsuario);
+
+            if (ultimoToken == null)
+            {
+                return new Respuesta<Usuario>
+                {
+                    IsSuccess = false,
+                    Mensaje = $"No existe ningún token activo del usuario '{idUsuario}' para eliminar."
+                };
+            }
+
+            var esExitoso = await EliminarHistorialRefreshTokensPorUsuario(idUsuario);
+
+            return new Respuesta<Usuario>
+            {
+                IsSuccess = esExitoso,
+                Mensaje = $"Se eliminó todo el historial de tokens del usuario {idUsuario} generados anteriormente y que ya estaban vencidos."
+            };
+        }
+
         // Consulta el último historial de Token que ha generado el usuario
         private async Task<HistorialRefreshToken> ConsultarUltimoHistorialRefreshTokensPorUsuario(int idUsuario, string? accessToken = null, string? refreshToken = null)
         {
@@ -300,7 +303,6 @@ namespace Service.Implementacion
             var esExitoso = await _autorizacionDAL.EliminarHistorialRefreshTokensPorUsuario(idUsuario);
             return esExitoso;
         }
-
         #endregion Métodos Privados
 
     }
