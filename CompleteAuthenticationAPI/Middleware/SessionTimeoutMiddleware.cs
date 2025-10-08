@@ -11,9 +11,10 @@
         {
             _next = next;
             _logger = logger;
-            _timeoutDuration = TimeSpan.FromMinutes(2); //configuration.GetValue<int>("SessionTimeout", 3)
+            _timeoutDuration = TimeSpan.FromMinutes(Convert.ToInt32(configuration["SessionTimeOut"]!));
         }
 
+        //Crea la sesión para el usuario autorizado
         public async Task InvokeAsync(HttpContext context)
         {
             // Verificar si es una ruta que requiere autenticación

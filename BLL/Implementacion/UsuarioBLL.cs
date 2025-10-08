@@ -83,7 +83,7 @@ namespace BLL.Implementacion
                     }
                     else
                     {
-                        resultOperacion = await _autorizacionBLL.GenerarAccessTokenYRefreshTokenConCredenciales(new() { Email = pUsuario.Email, Contrasena = pUsuario.Contrasena }); //aqui debo encargarme de enviar un objeto tipo LoginUsuarioDTO
+                        resultOperacion = await _autorizacionBLL.GenerarAccessTokenYRefreshTokenConCredenciales(new() { Email = pUsuario.Email, Contrasena = _utilidades.EncriptarContraseña(pUsuario.Contrasena) }); //aqui debo encargarme de enviar un objeto tipo LoginUsuarioDTO
                         return new Respuesta<Usuario> { IsSuccess = true, Objeto = resultOperacion.Objeto, Mensaje = "¡Autenticación exitosa!" };
                     }
                 }
@@ -154,9 +154,9 @@ namespace BLL.Implementacion
                     bool correoEnviado = _utilidades.EnviarCorreo(infoCorreo);
 
                     if (correoEnviado)
-                        return new Respuesta<Usuario> { IsSuccess = true, Mensaje = $"Su cuenta ha sido creada satisfactoriamente. Hemos enviado un mensaje al correo {pUsuario.Email} para confirmar su cuenta." };
+                        return new Respuesta<Usuario> { IsSuccess = true, Mensaje = $"Su cuenta ha sido creada satisfactoriamente. Hemos enviado un mensaje al correo '{pUsuario.Email}' para confirmar su cuenta." };
                     else
-                        return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"¡ERROR! No fue posible enviar el correo a {pUsuario.Email}" };
+                        return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"¡ERROR! No fue posible enviar el correo a '{pUsuario.Email}'." };
                 }
                 else
                 {

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BLL.Interfaz;
+using CompleteAuthenticationAPI.Cookies;
 using CompleteAuthenticationAPI.Seguridad;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -25,12 +26,14 @@ namespace CompleteAuthenticationAPI.Controllers
         private readonly IUsuarioBLL _usuario;
         private readonly IAutorizacionBLL _autorizacion;
         private readonly IConfiguration _configuration;
+        private readonly ICookieService _cookies;
 
-        public UsuarioController(IUsuarioBLL usuarioBLL, IAutorizacionBLL autorizacionBLL, IConfiguration configuration)
+        public UsuarioController(IUsuarioBLL usuarioBLL, IAutorizacionBLL autorizacionBLL, IConfiguration configuration, ICookieService cookies)
         {
             _usuario = usuarioBLL;
             _autorizacion = autorizacionBLL;
             _configuration = configuration;
+            _cookies = cookies;
         }
 
 
@@ -50,9 +53,13 @@ namespace CompleteAuthenticationAPI.Controllers
 
         [Authorize]
         [HttpGet("ValidarToken")] //3ro
-        public IActionResult ValidarToken(string token) //cambiar esto para enviar el token como Bearer Token desde la pestaña de Authorization //preguntar a ChatGPT: Quiero que el token se valide automáticamente como JWT (usando AddAuthentication y [Authorize])
+        public IActionResult ValidarToken() //cambiar esto para enviar el token como Bearer Token desde la pestaña de Authorization //preguntar a ChatGPT: Quiero que el token se valide automáticamente como JWT (usando AddAuthentication y [Authorize])
         {
-            bool esTokenValido = _autorizacion.ValidarToken(token);
+            bool esTokenValido = false;
+
+            if (Request.Cookies.TryGetValue("cookieAccessToken", out string? token))
+                esTokenValido = _autorizacion.ValidarToken(token);
+            
             return Ok(new { isSuccess = esTokenValido });
         }
 
@@ -62,8 +69,8 @@ namespace CompleteAuthenticationAPI.Controllers
             var resultado = await _usuario.AutenticarUsuario(pUsuario);
             if (resultado.IsSuccess)
             {
-                //SetCookieAccessToken(resultado.Objeto.AccessToken);
-                //SetCookieRefreshToken(resultado.Objeto.RefreshToken);
+                _cookies.SetCookieAccessToken(resultado.Objeto.AccessToken);
+                _cookies.SetCookieRefreshToken(resultado.Objeto.RefreshToken);
                 return Ok(new { isSuccess = resultado.IsSuccess, mensaje = resultado.Mensaje, idUsuario = resultado.Objeto.IdUsuario, accessToken = resultado.Objeto.AccessToken, refreshToken = resultado.Objeto.RefreshToken });
             }
             else
@@ -98,8 +105,9 @@ namespace CompleteAuthenticationAPI.Controllers
 
             if (resultado.IsSuccess)
             {
-                //SetCookieAccessToken(resultado.Objeto.AccessToken);
-                //SetCookieRefreshToken(resultado.Objeto.RefreshToken);
+                // Cargar las cookies en el navegador del usuario
+                _cookies.SetCookieAccessToken(resultado.Objeto.AccessToken);
+                _cookies.SetCookieRefreshToken(resultado.Objeto.RefreshToken);
                 return Ok(resultado);
             }
             else
@@ -116,9 +124,9 @@ namespace CompleteAuthenticationAPI.Controllers
 
             var response = await _autorizacion.CerrarSesion(int.Parse(idUsuario!));
 
-            //// Eliminar las cookies
-            //Response.Cookies.Delete("accessToken");
-            //Response.Cookies.Delete("refreshToken");
+            // Eliminar las cookies del navegador del usuario
+            Response.Cookies.Delete("cookieAccessToken");
+            Response.Cookies.Delete("cookieRefreshToken");
 
             if (response.IsSuccess)
                 return Ok(response);
@@ -126,11 +134,9 @@ namespace CompleteAuthenticationAPI.Controllers
                 return BadRequest(response);
         }
 
-
-
-
         [Authorize]
         [HttpGet("ping")]
+        [ServiceFilter(typeof(AdministradorHeaders))]
         public IActionResult Ping()
         {
             return Ok(new
@@ -140,44 +146,6 @@ namespace CompleteAuthenticationAPI.Controllers
                 user = User.Identity?.Name
             });
         }
-
-
-
-
-
-
-        //[Authorize] //probar si funciona con Authorize
-        // Configurar Access Token en cookie HttpOnly
-        private void SetCookieAccessToken(string token)
-        {
-            var cookieOptions = new CookieOptions
-            {
-                HttpOnly = true,        // No accesible desde JavaScript
-                Secure = true,          // Solo HTTPS (en producción)
-                SameSite = SameSiteMode.Strict, // Protección CSRF
-                Expires = DateTimeOffset.UtcNow.AddMinutes(_configuration.GetValue<int>("JwtSettings:AccessToken_ExpirationTime")), //AccessToken
-                Path = "/"              // Disponible en toda la app
-            };
-
-            Response.Cookies.Append("accessToken", token, cookieOptions);
-        }
-
-        //[Authorize] //probar si funciona con Authorize
-        // Configurar Refresh Token en cookie HttpOnly
-        private void SetCookieRefreshToken(string token)
-        {
-            var cookieOptions = new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTimeOffset.UtcNow.AddMinutes(_configuration.GetValue<int>("JwtSettings:RefreshToken_ExpirationTime")),  //RefreshToken
-                Path = "/api/auth/refresh" // Solo accesible en endpoint de refresh
-            };
-
-            Response.Cookies.Append("refreshToken", token, cookieOptions);
-        }
-
 
     }
 }

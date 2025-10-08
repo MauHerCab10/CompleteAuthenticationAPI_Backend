@@ -22,14 +22,14 @@ namespace Service.Implementacion
     {
         private readonly IConfiguration _configuration;
         private readonly IUtilidades _utilidades;
-        private readonly IUsuarioBLL _usuarioBLL;
+        private readonly IUsuarioDAL _usuarioDAL;
         private readonly IAutorizacionDAL _autorizacionDAL;
 
-        public AutorizacionBLL(IConfiguration configuration, IUtilidades utilidades, IUsuarioBLL usuarioBLL, IAutorizacionDAL autorizacionDAL)
+        public AutorizacionBLL(IConfiguration configuration, IUtilidades utilidades, IUsuarioDAL usuarioDAL, IAutorizacionDAL autorizacionDAL)
         {
             _configuration = configuration;
             _utilidades = utilidades;
-            _usuarioBLL = usuarioBLL;
+            _usuarioDAL = usuarioDAL;
             _autorizacionDAL = autorizacionDAL;
         }
 
@@ -38,17 +38,17 @@ namespace Service.Implementacion
         //Genera el AccessToken y el RefreshToken, usando las credenciales de acceso del usuario
         public async Task<Respuesta<Usuario>> GenerarAccessTokenYRefreshTokenConCredenciales(LoginUsuarioDTO autorizacion)
         {
-            var usuarioEncontrado = await _usuarioBLL.ConsultarUsuario(autorizacion.Email, autorizacion.Contrasena);
+            var usuarioEncontrado = await _usuarioDAL.ConsultarUsuario(autorizacion.Email, autorizacion.Contrasena);
             if (usuarioEncontrado == null)
                 return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "Usuario no encontrado. Favor validar los datos ingresados." };
 
-            string accessTokenCreado = GenerarAccessToken(usuarioEncontrado.Objeto.IdUsuario.ToString());
+            string accessTokenCreado = GenerarAccessToken(usuarioEncontrado.IdUsuario.ToString());
             
             string refreshTokenCreado = GenerarRefreshToken();
 
-            await EliminarHistorialRefreshTokenAnteriores(usuarioEncontrado.Objeto.IdUsuario);
+            await EliminarHistorialRefreshTokenAnteriores(usuarioEncontrado.IdUsuario);
 
-            var usuario = await GuardarHistorialRefreshToken(usuarioEncontrado.Objeto.IdUsuario, accessTokenCreado, refreshTokenCreado);
+            var usuario = await GuardarHistorialRefreshToken(usuarioEncontrado.IdUsuario, accessTokenCreado, refreshTokenCreado);
 
             return usuario;
         }
@@ -122,11 +122,13 @@ namespace Service.Implementacion
         }
 
 
-        //Valida si el token ingresado es válido para realizar peticiones
-        public bool ValidarToken(string token)
+        //Valida si el AccessToken ingresado es válido para realizar peticiones
+        public bool ValidarToken(string accessToken)
         {
             var claimsPrincipal = new ClaimsPrincipal();
             var tokenHandler = new JwtSecurityTokenHandler();
+
+            //hacer aqui lo del Issuer y el Audience de GenerarAccessToken()
             var validationParameters = new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
@@ -140,7 +142,7 @@ namespace Service.Implementacion
 
             try
             {
-                claimsPrincipal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
+                claimsPrincipal = tokenHandler.ValidateToken(accessToken, validationParameters, out SecurityToken validatedToken);
                 return true;
             }
             catch (Exception)
@@ -156,11 +158,12 @@ namespace Service.Implementacion
         //Genera ÚNICAMENTE el AccesToken
         private string GenerarAccessToken(string idUsuario)
         {
+            //Creación de la llave de seguridad
             var key = _configuration.GetValue<string>("JwtSettings:SecretKey")!;
-            var keyBytes = Encoding.ASCII.GetBytes(key);
+            var keyBytes = Encoding.UTF8.GetBytes(key);
 
-            var claims = new ClaimsIdentity();
-            claims.AddClaim(new Claim(ClaimTypes.NameIdentifier, idUsuario));
+            var userClaims = new ClaimsIdentity();
+            userClaims.AddClaim(new Claim(ClaimTypes.NameIdentifier, idUsuario));
 
             var credencialesToken = new SigningCredentials(
                 new SymmetricSecurityKey(keyBytes),
@@ -169,44 +172,21 @@ namespace Service.Implementacion
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = claims,
+                Subject = userClaims,
+                Issuer = _configuration.GetValue<string>("JwtSettings:Issuer"),
+                Audience = _configuration.GetValue<string>("JwtSettings:Audience"),
                 NotBefore = _utilidades.FechaHoraActualColombia(),
                 Expires = _utilidades.FechaHoraActualColombia().AddMinutes(_configuration.GetValue<int>("JwtSettings:AccessToken_ExpirationTime")), //AccessToken
                 SigningCredentials = credencialesToken
             };
 
+            //Creación del Token
             var tokenHandler = new JwtSecurityTokenHandler();
             var tokenConfig = tokenHandler.CreateToken(tokenDescriptor);
             string tokenCreado = tokenHandler.WriteToken(tokenConfig);
 
             return tokenCreado;
         }
-        //public string GenerarJWT(Usuario modelo)
-        //{
-        //    var userClaims = new[]
-        //    {
-        //        new Claim(ClaimTypes.NameIdentifier, modelo.IdUsuario.ToString()),
-        //        new Claim(ClaimTypes.Name, modelo.Email)
-        //    };
-
-        //    //creación de la Llave de Seguridad
-        //    var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:SecretKey"]!));
-
-        //    //creación de las Credenciales de seguridad
-        //    var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature);
-
-        //    //Parametrización del Token
-        //    var configurationJWT = new JwtSecurityToken(
-        //        claims: userClaims,
-        //        expires: DateTime.UtcNow.AddMinutes(5), //usar una variable de appsettings
-        //        signingCredentials: credentials
-        //    );
-
-        //    //Token generado
-        //    var token = new JwtSecurityTokenHandler().WriteToken(configurationJWT);
-
-        //    return token;
-        //}
 
         //Genera ÚNICAMENTE el RefreshToken
         private string GenerarRefreshToken()
@@ -238,7 +218,7 @@ namespace Service.Implementacion
             int idNuevoHistorialToken = await GuardarHistorialRefreshTokenDeUsuario(historialRefreshToken.IdUsuario, historialRefreshToken.AccessToken, historialRefreshToken.RefreshToken, historialRefreshToken.FechaCreacion, historialRefreshToken.FechaExpiracion);
 
             if (idNuevoHistorialToken > 0)
-                return new Respuesta<Usuario> { IsSuccess = true, Mensaje = "¡AccessToken y RefreshToken generados OK!", Objeto = new Usuario { AccessToken = accessToken, RefreshToken = refreshToken } };
+                return new Respuesta<Usuario> { IsSuccess = true, Mensaje = "¡AccessToken y RefreshToken generados OK!", Objeto = new Usuario { IdUsuario = idUsuario, AccessToken = accessToken, RefreshToken = refreshToken } };
             else
                 return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "¡Error al momento de generar el AccessToken y el RefreshToken!", Objeto = null! };
         }

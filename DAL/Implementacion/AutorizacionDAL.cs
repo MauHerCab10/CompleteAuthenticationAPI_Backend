@@ -34,8 +34,8 @@ namespace DAL.Implementacion
                         command.CommandType = CommandType.StoredProcedure;
 
                         command.Parameters.AddWithValue("@IdUsuario", idUsuario);
-                        command.Parameters.AddWithValue("@AccessToken", idUsuario);
-                        command.Parameters.AddWithValue("@RefreshToken", idUsuario);
+                        command.Parameters.AddWithValue("@AccessToken", accessToken);
+                        command.Parameters.AddWithValue("@RefreshToken", refreshToken);
 
                         if (connection.State == ConnectionState.Closed)
                             await connection.OpenAsync();

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using CompleteAuthenticationAPI.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Service.Implementacion;
@@ -10,12 +11,16 @@ namespace CompleteAuthenticationAPI.Seguridad
 {
     public class AdministradorHeaders : Attribute, IAuthorizationFilter
     {
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ICookieService _cookies;
         private readonly IConfiguration _configuration;
         private readonly IAutorizacionBLL _autorizacion;
         private readonly IUtilidades _utilidades;
 
-        public AdministradorHeaders(IConfiguration configuration, IAutorizacionBLL autorizacion, IUtilidades utilidades)
+        public AdministradorHeaders(IHttpContextAccessor httpContextAccessor, ICookieService cookies, IConfiguration configuration, IAutorizacionBLL autorizacion, IUtilidades utilidades)
         {
+            _httpContextAccessor = httpContextAccessor;
+            _cookies = cookies;
             _configuration = configuration;
             _autorizacion = autorizacion;
             _utilidades = utilidades;
@@ -25,10 +30,13 @@ namespace CompleteAuthenticationAPI.Seguridad
         {
             try
             {
-                var headers = context.HttpContext.Request.Headers;
+                //var headers = context.HttpContext.Request.Headers;
+                //var accessToken = headers["AccessToken"].FirstOrDefault();
+                //var refreshToken = headers["RefreshToken"].FirstOrDefault();
 
-                var accessToken = headers["AccessToken"].FirstOrDefault();
-                var refreshToken = headers["RefreshToken"].FirstOrDefault();
+                var cookies = _httpContextAccessor.HttpContext;
+                cookies!.Request.Cookies.TryGetValue("cookieAccessToken", out string? accessToken);
+                cookies!.Request.Cookies.TryGetValue("cookieRefreshToken", out string? refreshToken);
 
                 if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(refreshToken))
                 {
@@ -80,9 +88,13 @@ namespace CompleteAuthenticationAPI.Seguridad
                     return;
                 }
 
+                //Cargar las cookies en el navegador del usuario
+                //context.HttpContext.Items["AccessToken"] = autorizacion.Result.Objeto.AccessToken;
+                //context.HttpContext.Items["RefreshToken"] = refreshToken;
+                _cookies.SetCookieAccessToken(autorizacion.Result.Objeto.AccessToken);
+                _cookies.SetCookieRefreshToken(refreshToken);
+
                 context.HttpContext.Items["IdUsuario"] = idUsuario;
-                context.HttpContext.Items["AccessToken"] = autorizacion.Result.Objeto.AccessToken;
-                context.HttpContext.Items["RefreshToken"] = refreshToken;
             }
             catch (Exception ex)
             {
