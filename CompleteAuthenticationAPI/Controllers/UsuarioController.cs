@@ -53,7 +53,8 @@ namespace CompleteAuthenticationAPI.Controllers
 
         [Authorize]
         [HttpGet("ValidarToken")] //3ro
-        public IActionResult ValidarToken() //cambiar esto para enviar el token como Bearer Token desde la pestaña de Authorization //preguntar a ChatGPT: Quiero que el token se valide automáticamente como JWT (usando AddAuthentication y [Authorize])
+        [ServiceFilter(typeof(AdministradorHeaders))]
+        public IActionResult ValidarToken()
         {
             bool esTokenValido = false;
 
@@ -125,8 +126,7 @@ namespace CompleteAuthenticationAPI.Controllers
             var response = await _autorizacion.CerrarSesion(int.Parse(idUsuario!));
 
             // Eliminar las cookies del navegador del usuario
-            Response.Cookies.Delete("cookieAccessToken");
-            Response.Cookies.Delete("cookieRefreshToken");
+            _cookies.EliminarCookiesDelUsuario();
 
             if (response.IsSuccess)
                 return Ok(response);
@@ -135,7 +135,7 @@ namespace CompleteAuthenticationAPI.Controllers
         }
 
         [Authorize]
-        [HttpGet("ping")]
+        [HttpGet("Ping")]
         [ServiceFilter(typeof(AdministradorHeaders))]
         public IActionResult Ping()
         {

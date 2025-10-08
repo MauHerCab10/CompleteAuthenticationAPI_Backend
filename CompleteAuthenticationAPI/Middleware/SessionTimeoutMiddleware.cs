@@ -30,11 +30,11 @@
                     TimeSpan elapsedTime = now - lastActivityTime;
                     if (elapsedTime > _timeoutDuration)
                     {
-                        _logger.LogInformation("Sesión expirada por inactividad para usuario: {User}", context.User.Identity.Name);
+                        _logger.LogInformation($"Sesión expirada por inactividad para el usuario: '{context.User.Identity.Name}'.");
 
                         context.Session.Clear();
                         context.Response.StatusCode = 401;
-                        await context.Response.WriteAsync("Sesión expirada por inactividad");
+                        await context.Response.WriteAsync("Sesión expirada por inactividad.");
                         return;
                     }
                 }

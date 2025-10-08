@@ -94,17 +94,17 @@ namespace Transversal.Helper
                 //configuración y parametrización del AccessToken
                 jwtConfig.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuerSigningKey = true,
-                    ValidateIssuer = true, //valida q las apps externas puedan usar la URL donde se encuentra nuestra Api
-                    ValidIssuer = configuration["JwtSettings:Issuer"],
-                    ValidateAudience = true, //quienes pueden acceder a nuestra Api
-                    ValidAudience = configuration["JwtSettings:Audience"],
-                    ValidateLifetime = true, //valida el tiempo de vida del Token
-                    ClockSkew = TimeSpan.Zero,
-                    NameClaimType = ClaimTypes.NameIdentifier,
-                    RoleClaimType = ClaimTypes.Role,
+                    ValidateIssuerSigningKey = true, //verifica la firma del token usando la clave secreta (SecretKey). Esto garantiza que nadie haya modificado el token
+                    ValidateIssuer = true, //comprueba que el token proviene del emisor correcto ("fullauth-api.com")
+                    ValidIssuer = configuration["JwtSettings:Issuer"], //valor esperado del emisor (JwtSettings:Issuer)
+                    ValidateAudience = true, //asegura que el token esté destinado a esta API
+                    ValidAudience = configuration["JwtSettings:Audience"], //valor esperado de la audiencia (JwtSettings:Audience)
+                    ValidateLifetime = true, //controla si el tiempo de vida del Token será verificado durante la validación
+                    ClockSkew = TimeSpan.Zero, //elimina la tolerancia por desfase de reloj
+                    NameClaimType = ClaimTypes.NameIdentifier, //indican qué claim se usará como nombre del usuario
+                    RoleClaimType = ClaimTypes.Role, //indican qué claim se usará como rol del usuario
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(configuration["JwtSettings:SecretKey"]!)
+                        Encoding.UTF8.GetBytes(configuration["JwtSettings:SecretKey"]!) //la clave secreta que se usa para validar la firma del token. Si no coincide, el token es inválido
                     )
                 };
 

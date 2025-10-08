@@ -125,24 +125,27 @@ namespace Service.Implementacion
         //Valida si el AccessToken ingresado es válido para realizar peticiones
         public bool ValidarToken(string accessToken)
         {
-            var claimsPrincipal = new ClaimsPrincipal();
-            var tokenHandler = new JwtSecurityTokenHandler();
-
-            //hacer aqui lo del Issuer y el Audience de GenerarAccessToken()
-            var validationParameters = new TokenValidationParameters
+            TokenValidationParameters validationParameters = new TokenValidationParameters
             {
-                ValidateIssuerSigningKey = true,
-                ValidateIssuer = false, //valida q las apps externas puedan usar la URL donde se encuentra nuestra Api
-                ValidateAudience = false, //quienes pueden acceder a nuestra Api
-                ValidateLifetime = true, //valida el tiempo de vida del Token
-                ClockSkew = TimeSpan.Zero,
-                IssuerSigningKey = new SymmetricSecurityKey
-                (Encoding.UTF8.GetBytes(_configuration["JWT:SecretKey"]!))
+                ValidateIssuerSigningKey = true, //verifica la firma del token usando la clave secreta (SecretKey). Esto garantiza que nadie haya modificado el token
+                ValidateIssuer = true, //comprueba que el token proviene del emisor correcto ("fullauth-api.com")
+                ValidIssuer = _configuration["JwtSettings:Issuer"], //valor esperado del emisor, tomado de appsettings.json (JwtSettings:Issuer)
+                ValidateAudience = true, //asegura que el token esté destinado a esta API
+                ValidAudience = _configuration["JwtSettings:Audience"], //valor esperado de la audiencia (JwtSettings:Audience)
+                ValidateLifetime = true, //controla si el tiempo de vida del Token será verificado durante la validación
+                ClockSkew = TimeSpan.Zero, //elimina la tolerancia por desfase de reloj
+                NameClaimType = ClaimTypes.NameIdentifier, //indican qué claim se usará como nombre del usuario
+                RoleClaimType = ClaimTypes.Role, //indican qué claim se usará como rol del usuario
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(_configuration["JwtSettings:SecretKey"]!) //la clave secreta que se usa para validar la firma del token. Si no coincide, el token es inválido
+                )
             };
 
             try
             {
-                claimsPrincipal = tokenHandler.ValidateToken(accessToken, validationParameters, out SecurityToken validatedToken);
+                JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+                ClaimsPrincipal claimsPrincipal = tokenHandler.ValidateToken(accessToken, validationParameters, out SecurityToken validatedToken);
+
                 return true;
             }
             catch (Exception)

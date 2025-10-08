@@ -48,6 +48,17 @@ namespace CompleteAuthenticationAPI.Seguridad
                     return;
                 }
 
+                bool esTokenValido = _autorizacion.ValidarToken(accessToken);
+                if (!esTokenValido)
+                {
+                    context.Result = new BadRequestObjectResult(new Respuesta<Usuario>
+                    {
+                        IsSuccess = false,
+                        Mensaje = "AccessToken inválido."
+                    });
+                    return;
+                }
+
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var jwt = tokenHandler.ReadJwtToken(accessToken);
                 string idUsuario = jwt.Claims.First(x => x.Type == JwtRegisteredClaimNames.NameId).Value;

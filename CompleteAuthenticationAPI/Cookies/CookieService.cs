@@ -1,4 +1,6 @@
-﻿namespace CompleteAuthenticationAPI.Cookies
+﻿using Azure;
+
+namespace CompleteAuthenticationAPI.Cookies
 {
     public class CookieService : ICookieService
     {
@@ -11,12 +13,12 @@
             _configuration = configuration;
         }
 
-        // Configuración de AccessToken en cookie HttpOnly
+        //Configuración de AccessToken en cookie HttpOnly
         public void SetCookieAccessToken(string token)
         {
             var context = _httpContextAccessor.HttpContext;
             if (context == null)
-                throw new InvalidOperationException("No HttpContext available.");
+                throw new InvalidOperationException("No HttpContext available [SetCookieAccessToken].");
 
             var cookieOptions = new CookieOptions
             {
@@ -30,12 +32,12 @@
             context.Response.Cookies.Append("cookieAccessToken", token, cookieOptions);
         }
 
-        // Configuración de RefreshToken en cookie HttpOnly
+        //Configuración de RefreshToken en cookie HttpOnly
         public void SetCookieRefreshToken(string token)
         {
             var context = _httpContextAccessor.HttpContext;
             if (context == null)
-                throw new InvalidOperationException("No HttpContext available.");
+                throw new InvalidOperationException("No HttpContext available [SetCookieRefreshToken].");
 
             var cookieOptions = new CookieOptions
             {
@@ -47,6 +49,17 @@
             };
 
             context.Response.Cookies.Append("cookieRefreshToken", token, cookieOptions);
+        }
+
+        //Eliminación de las cookies del navegador del usuario
+        public void EliminarCookiesDelUsuario()
+        {
+            var context = _httpContextAccessor.HttpContext;
+            if (context == null)
+                throw new InvalidOperationException("No HttpContext available [EliminarCookiesDelUsuario].");
+
+            context.Response.Cookies.Delete("cookieAccessToken");
+            context.Response.Cookies.Delete("cookieRefreshToken");
         }
 
     }
