@@ -17,7 +17,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Transversal.Model;
 
-namespace Transversal.Service
+namespace Service.Implementacion
 {
     public class Utilidades : IUtilidades
     {

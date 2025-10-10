@@ -9,7 +9,9 @@ namespace Transversal.Model
     public class Respuesta<T>
     {
         public bool IsSuccess { get; set; }
+        
         public string Mensaje { get; set; } = string.Empty;
+        
         public T Objeto { get; set; } = default!;
     }
 }

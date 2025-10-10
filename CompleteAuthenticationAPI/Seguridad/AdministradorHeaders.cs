@@ -1,5 +1,4 @@
-﻿using CompleteAuthenticationAPI.Cookies;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Service.Implementacion;
@@ -87,6 +86,7 @@ namespace CompleteAuthenticationAPI.Seguridad
                     return;
                 }
 
+                //Por cada petición que requiera autenticación (AccessToken de por medio), se actualiza el AccessToken para mantenerle refrescando su tiempo de expiración en el servidor debido a su corto tiempo de vida
                 Task<Respuesta<Usuario>> autorizacion = _autorizacion.ActualizarAccessTokenConRefreshTokenAnterior(int.Parse(idUsuario), accessToken, refreshToken);
 
                 if (!autorizacion.Result.IsSuccess)
@@ -99,13 +99,14 @@ namespace CompleteAuthenticationAPI.Seguridad
                     return;
                 }
 
-                //Cargar las cookies en el navegador del usuario
-                //context.HttpContext.Items["AccessToken"] = autorizacion.Result.Objeto.AccessToken;
-                //context.HttpContext.Items["RefreshToken"] = refreshToken;
+                //Cargar las cookies en el navegador del usuario (quedan actualizadas para la siguiente petición entrante)
                 _cookies.SetCookieAccessToken(autorizacion.Result.Objeto.AccessToken);
                 _cookies.SetCookieRefreshToken(refreshToken);
 
+                //Variables globales a nivel local del servidor (nunca se envían al Frontend)
                 context.HttpContext.Items["IdUsuario"] = idUsuario;
+                context.HttpContext.Items["AccessToken"] = autorizacion.Result.Objeto.AccessToken;
+                context.HttpContext.Items["RefreshToken"] = refreshToken;
             }
             catch (Exception ex)
             {

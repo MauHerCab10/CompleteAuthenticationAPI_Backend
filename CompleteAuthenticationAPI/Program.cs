@@ -14,7 +14,6 @@ using Service.Interfaz;
 using System.Text;
 using Transversal.Helper;
 using Transversal.Model;
-using Transversal.Service;
 
 namespace CompleteAuthenticationAPI
 {
@@ -28,7 +27,7 @@ namespace CompleteAuthenticationAPI
             builder.Services.InyectarDependencias(builder.Configuration);
 
             //Configuración e Inicialización de la Aplicación Web
-            builder.Services.ConfigurarInicializarAplicacionWeb(builder.Build());
+            builder.Services.ConfigurarInicializacionAplicacionWeb(builder.Build());
         }
     }
 }

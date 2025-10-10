@@ -1,6 +1,5 @@
 ﻿using BLL.Implementacion;
 using BLL.Interfaz;
-using CompleteAuthenticationAPI.Cookies;
 using CompleteAuthenticationAPI.Middleware;
 using CompleteAuthenticationAPI.Seguridad;
 using DAL.Implementacion;
@@ -20,7 +19,6 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Transversal.Model;
-using Transversal.Service;
 
 namespace Transversal.Helper
 {
@@ -155,7 +153,7 @@ namespace Transversal.Helper
 
         }
 
-        public static void ConfigurarInicializarAplicacionWeb(this IServiceCollection services, WebApplication app)
+        public static void ConfigurarInicializacionAplicacionWeb(this IServiceCollection services, WebApplication app)
         {
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

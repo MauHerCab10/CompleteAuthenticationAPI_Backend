@@ -24,13 +24,15 @@ namespace Service.Implementacion
         private readonly IUtilidades _utilidades;
         private readonly IUsuarioDAL _usuarioDAL;
         private readonly IAutorizacionDAL _autorizacionDAL;
+        private readonly ICookieService _cookies;
 
-        public AutorizacionBLL(IConfiguration configuration, IUtilidades utilidades, IUsuarioDAL usuarioDAL, IAutorizacionDAL autorizacionDAL)
+        public AutorizacionBLL(IConfiguration configuration, IUtilidades utilidades, IUsuarioDAL usuarioDAL, IAutorizacionDAL autorizacionDAL, ICookieService cookies)
         {
             _configuration = configuration;
             _utilidades = utilidades;
             _usuarioDAL = usuarioDAL;
             _autorizacionDAL = autorizacionDAL;
+            _cookies = cookies;
         }
 
 
@@ -73,15 +75,6 @@ namespace Service.Implementacion
         }
 
 
-        //Consulta la FechaVencimiento del RefreshToken
-        public async Task<DateTime?> ConsultarFechaVencimientoRefreshToken(int idUsuario)
-        {
-            var refreshTokenEncontrado = await ConsultarUltimoHistorialRefreshTokensPorUsuario(idUsuario);
-
-            return refreshTokenEncontrado == null ? null : refreshTokenEncontrado.FechaExpiracion;
-        }
-
-
         //Actualiza el AccessToken del usuario con base al RefreshToken encontrado
         public async Task<Respuesta<Usuario>> ActualizarAccessTokenConRefreshTokenAnterior(int idUsuario, string accessToken, string refreshToken)
         {
@@ -98,12 +91,21 @@ namespace Service.Implementacion
         }
 
 
+        //Consulta la FechaVencimiento del RefreshToken
+        public async Task<DateTime?> ConsultarFechaVencimientoRefreshToken(int idUsuario)
+        {
+            var refreshTokenEncontrado = await ConsultarUltimoHistorialRefreshTokensPorUsuario(idUsuario);
+
+            return refreshTokenEncontrado == null ? null : refreshTokenEncontrado.FechaExpiracion;
+        }
+
+
         //Cierra la sesión del usuario borrando todos los token (activos e inactivos) del usuario
         public async Task<Respuesta<Usuario>> CerrarSesion(int idUsuario)
         {
             var tokensUsuario = await ConsultarUltimoHistorialRefreshTokensPorUsuario(idUsuario);
 
-            if (tokensUsuario != null)
+            if (tokensUsuario == null)
             {
                 return new Respuesta<Usuario>
                 {
@@ -112,12 +114,16 @@ namespace Service.Implementacion
                 };
             }
 
+            // Eliminar todo el historial de Tokens del usuario
             var esExitoso = await EliminarHistorialRefreshTokensPorUsuario(idUsuario);
+
+            // Eliminar las cookies del navegador del usuario
+            _cookies.EliminarCookiesDelUsuario();
 
             return new Respuesta<Usuario>
             {
                 IsSuccess = esExitoso,
-                Mensaje = $"Se eliminaron todos los Tokens del usuario '{idUsuario}'. ¡Sesión cerrada correctamente!"
+                Mensaje = $"Se eliminaron todos los Tokens y Cookies del usuario '{idUsuario}'. ¡Sesión cerrada correctamente!"
             };
         }
 
@@ -230,9 +236,9 @@ namespace Service.Implementacion
                 FechaExpiracion = _utilidades.FechaHoraActualColombia().AddMinutes(_configuration.GetValue<int>("JwtSettings:RefreshToken_ExpirationTime")) //RefreshToken
             };
 
-            int idNuevoHistorialToken = await GuardarHistorialRefreshTokenDeUsuario(historialRefreshToken.IdUsuario, historialRefreshToken.AccessToken, historialRefreshToken.RefreshToken, historialRefreshToken.FechaCreacion, historialRefreshToken.FechaExpiracion);
+            bool esExitoso = await GuardarHistorialRefreshTokenDeUsuario(historialRefreshToken.IdUsuario, historialRefreshToken.AccessToken, historialRefreshToken.RefreshToken, historialRefreshToken.FechaCreacion, historialRefreshToken.FechaExpiracion);
 
-            if (idNuevoHistorialToken > 0)
+            if (esExitoso)
                 return new Respuesta<Usuario> { IsSuccess = true, Mensaje = "¡AccessToken y RefreshToken generados OK!", Objeto = new Usuario { IdUsuario = idUsuario, AccessToken = accessToken, RefreshToken = refreshToken } };
             else
                 return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "¡Error al momento de generar el AccessToken y el RefreshToken!", Objeto = null! };
@@ -279,10 +285,10 @@ namespace Service.Implementacion
         }
 
         // Guarda el AccessToken y el RefreshToken del usuario
-        private async Task<int> GuardarHistorialRefreshTokenDeUsuario(int idUsuario, string accessToken, string refreshToken, DateTime fechaCreacion, DateTime fechaExpiracion)
+        private async Task<bool> GuardarHistorialRefreshTokenDeUsuario(int idUsuario, string accessToken, string refreshToken, DateTime fechaCreacion, DateTime fechaExpiracion)
         {
-            var idNuevoHistorialToken = await _autorizacionDAL.GuardarHistorialRefreshTokenDeUsuario(idUsuario, accessToken, refreshToken, fechaCreacion, fechaExpiracion);
-            return idNuevoHistorialToken;
+            bool esExitoso = await _autorizacionDAL.GuardarHistorialRefreshTokenDeUsuario(idUsuario, accessToken, refreshToken, fechaCreacion, fechaExpiracion);
+            return esExitoso;
         }
 
         // Actualiza el AccessToken del usuario

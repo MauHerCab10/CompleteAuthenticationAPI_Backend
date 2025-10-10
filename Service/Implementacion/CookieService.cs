@@ -1,6 +1,9 @@
 ﻿using Azure;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Service.Interfaz;
 
-namespace CompleteAuthenticationAPI.Cookies
+namespace Service.Implementacion
 {
     public class CookieService : ICookieService
     {

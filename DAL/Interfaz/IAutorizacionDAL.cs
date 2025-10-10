@@ -11,7 +11,7 @@ namespace DAL.Interfaz
     {
         Task<HistorialRefreshToken> ConsultarUltimoHistorialRefreshTokensPorUsuario(int idUsuario, string? accessToken, string? refreshToken);
 
-        Task<int> GuardarHistorialRefreshTokenDeUsuario(int idUsuario, string accessToken, string refreshToken, DateTime fechaCreacion, DateTime fechaExpiracion);
+        Task<bool> GuardarHistorialRefreshTokenDeUsuario(int idUsuario, string accessToken, string refreshToken, DateTime fechaCreacion, DateTime fechaExpiracion);
 
         Task<bool> ActualizarHistorialRefreshTokenDeUsuario(int idHistorialToken, string accessToken);
 

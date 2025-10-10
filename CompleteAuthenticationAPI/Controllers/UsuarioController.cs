@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
+using Azure.Core;
 using BLL.Interfaz;
-using CompleteAuthenticationAPI.Cookies;
 using CompleteAuthenticationAPI.Seguridad;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -15,7 +15,6 @@ using System.Reflection;
 using System.Security.Claims;
 using Transversal.DTOs;
 using Transversal.Model;
-using Transversal.Service;
 
 namespace CompleteAuthenticationAPI.Controllers
 {
@@ -25,14 +24,12 @@ namespace CompleteAuthenticationAPI.Controllers
     {
         private readonly IUsuarioBLL _usuario;
         private readonly IAutorizacionBLL _autorizacion;
-        private readonly IConfiguration _configuration;
         private readonly ICookieService _cookies;
 
-        public UsuarioController(IUsuarioBLL usuarioBLL, IAutorizacionBLL autorizacionBLL, IConfiguration configuration, ICookieService cookies)
+        public UsuarioController(IUsuarioBLL usuarioBLL, IAutorizacionBLL autorizacionBLL, ICookieService cookies)
         {
             _usuario = usuarioBLL;
             _autorizacion = autorizacionBLL;
-            _configuration = configuration;
             _cookies = cookies;
         }
 
@@ -59,6 +56,7 @@ namespace CompleteAuthenticationAPI.Controllers
             {
                 _cookies.SetCookieAccessToken(resultado.Objeto.AccessToken);
                 _cookies.SetCookieRefreshToken(resultado.Objeto.RefreshToken);
+
                 return Ok(new { isSuccess = resultado.IsSuccess, mensaje = resultado.Mensaje, idUsuario = resultado.Objeto.IdUsuario, accessToken = resultado.Objeto.AccessToken, refreshToken = resultado.Objeto.RefreshToken });
             }
             else
@@ -89,22 +87,26 @@ namespace CompleteAuthenticationAPI.Controllers
         }
 
         [Authorize]
-        [HttpGet("ValidarToken")] //7mo
+        [HttpGet("ValidarToken")] //7mo (no creo q lo llame desde el Frontend)
         [ServiceFilter(typeof(AdministradorHeaders))]
         public IActionResult ValidarToken()
         {
             bool esTokenValido = false;
 
-            if (Request.Cookies.TryGetValue("cookieAccessToken", out string? token))
-                esTokenValido = _autorizacion.ValidarToken(token);
+            var idUsuario = HttpContext.Items["IdUsuario"]?.ToString();
+            var accessToken = HttpContext.Items["AccessToken"]?.ToString();
+            var refreshToken = HttpContext.Items["RefreshToken"]?.ToString();
 
-            return Ok(new { isSuccess = esTokenValido });
+            if (!string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken))
+                esTokenValido = _autorizacion.ValidarToken(accessToken);
+
+            return Ok(new { isSuccess = esTokenValido, mensaje = $"Cookie_AccessToken: {(string.IsNullOrEmpty(accessToken) ? "VACÍA" : "OK")} / Cookie_RefreshToken: {(string.IsNullOrEmpty(refreshToken) ? "VACÍA" : "OK")}." });
         }
 
         [Authorize]
-        [HttpPost("ObtenerRefreshToken")]
+        [HttpPost("ObtenerRefreshToken")] //8vo (no creo q lo llame desde el Frontend)
         [ServiceFilter(typeof(AdministradorHeaders))]
-        public async Task<IActionResult> ObtenerRefreshToken() //[FromBody] RefreshTokenRequest request
+        public async Task<IActionResult> ObtenerRefreshToken()
         {
             var idUsuario = HttpContext.Items["IdUsuario"]?.ToString();
             var accessToken = HttpContext.Items["AccessToken"]?.ToString();
@@ -117,6 +119,7 @@ namespace CompleteAuthenticationAPI.Controllers
                 // Cargar las cookies en el navegador del usuario
                 _cookies.SetCookieAccessToken(resultado.Objeto.AccessToken);
                 _cookies.SetCookieRefreshToken(resultado.Objeto.RefreshToken);
+
                 return Ok(resultado);
             }
             else
@@ -126,16 +129,13 @@ namespace CompleteAuthenticationAPI.Controllers
         }
 
         [Authorize]
-        [HttpPost("CerrarSesion")]
+        [HttpPost("CerrarSesion")] //9no
         [ServiceFilter(typeof(AdministradorHeaders))]
         public async Task<IActionResult> CerrarSesion()
         {
             var idUsuario = HttpContext.Items["IdUsuario"]?.ToString();
 
             var response = await _autorizacion.CerrarSesion(int.Parse(idUsuario!));
-
-            // Eliminar las cookies del navegador del usuario
-            _cookies.EliminarCookiesDelUsuario();
 
             if (response.IsSuccess)
                 return Ok(response);
@@ -145,9 +145,13 @@ namespace CompleteAuthenticationAPI.Controllers
 
         [Authorize]
         [HttpGet("Ping")]
-        [ServiceFilter(typeof(AdministradorHeaders))]
+        [ServiceFilter(typeof(AdministradorHeaders))] //10 (solo para PRUEBAS)
         public IActionResult Ping()
         {
+            var idUsuario = HttpContext.Items["IdUsuario"]?.ToString();
+            var accessToken = HttpContext.Items["AccessToken"]?.ToString();
+            var refreshToken = HttpContext.Items["RefreshToken"]?.ToString();
+
             return Ok(new
             {
                 message = "Pong",

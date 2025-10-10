@@ -72,9 +72,9 @@ namespace DAL.Implementacion
             }
         }
 
-        public async Task<int> GuardarHistorialRefreshTokenDeUsuario(int idUsuario, string accessToken, string refreshToken, DateTime fechaCreacion, DateTime fechaExpiracion)
+        public async Task<bool> GuardarHistorialRefreshTokenDeUsuario(int idUsuario, string accessToken, string refreshToken, DateTime fechaCreacion, DateTime fechaExpiracion)
         {
-            object nuevoIdHistorialToken;
+            bool respuesta = false;
 
             using (SqlConnection connection = new SqlConnection(cadenaConexion))
             {
@@ -93,7 +93,10 @@ namespace DAL.Implementacion
                         if (connection.State == ConnectionState.Closed)
                             await connection.OpenAsync();
 
-                        nuevoIdHistorialToken = await command.ExecuteScalarAsync() ?? 0;
+                        int regsAfectados = await command.ExecuteNonQueryAsync();
+
+                        if (regsAfectados > 0)
+                            respuesta = true;
                     }
                     catch (Exception ex)
                     {
@@ -106,7 +109,7 @@ namespace DAL.Implementacion
                     }
                 }
 
-                return Convert.ToInt32(nuevoIdHistorialToken);
+                return respuesta;
             }
         }
 

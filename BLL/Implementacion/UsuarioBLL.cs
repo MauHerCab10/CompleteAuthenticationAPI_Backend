@@ -18,7 +18,6 @@ using System.Threading.Tasks;
 using Transversal.DTOs;
 using Transversal.Enums;
 using Transversal.Model;
-using Transversal.Service;
 
 namespace BLL.Implementacion
 {
@@ -134,7 +133,7 @@ namespace BLL.Implementacion
                 var existeUsuario = await ConsultarUsuarioPorId(pUsuario.Email); //_utilidades.EncriptarContraseña(pUsuario.Contrasena)
 
                 if (existeUsuario.IsSuccess)
-                    return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"El correo electrónico proporcionado ya se encuentra registrado en el sistema. {existeUsuario.Mensaje}" };
+                    return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"El correo electrónico proporcionado ya se encuentra registrado en el sistema. Favor acceder con sus credenciales de acceso. {existeUsuario.Mensaje}" };
 
                 if (string.IsNullOrEmpty(pUsuario.NombreApellido))
                     return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "campo de Nombre y Apellido es obligatorio." };
@@ -208,7 +207,7 @@ namespace BLL.Implementacion
                 {
                     string newGuidAcceso = _utilidades.GenerarGuid();
                     DateTime fechaCreacionGuid = _utilidades.FechaHoraActualColombia();
-                    DateTime fechaExpiracionGuid = _utilidades.FechaHoraActualColombia().AddMinutes(_configuration.GetValue<int>("JwtSettings:GuidAcceso_ExpirationTime"));
+                    DateTime fechaExpiracionGuid = _utilidades.FechaHoraActualColombia().AddMinutes(_configuration.GetValue<int>("GuidAcceso_ExpirationTime"));
 
                     bool respuesta = await _usuarioDAL.RestablecerContrasena(usuarioEncontrado.Objeto.IdUsuario, newGuidAcceso, fechaCreacionGuid, fechaExpiracionGuid);
                     if (respuesta)
@@ -260,8 +259,8 @@ namespace BLL.Implementacion
                 if (nuevaContrasena.Length < 12 || !Regex.IsMatch(nuevaContrasena, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])[^\s]+$"))
                     return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "Formato de contraseña inválido. La contraseña debe contener 12 caracteres como mínimo, al menos una minúscula, una mayúscula, un número, un caracter especial y no debe contener espacios." };
 
-                string contrasenaEncriptada = _utilidades.EncriptarContraseña(nuevaContrasena);
-                bool respuesta = await _usuarioDAL.ActualizarContrasenaAntigua(guidAcceso, contrasenaEncriptada);
+                string contrasenaHash = _utilidades.EncriptarContraseña(nuevaContrasena);
+                bool respuesta = await _usuarioDAL.ActualizarContrasenaAntigua(guidAcceso, contrasenaHash);
 
                 if (respuesta)
                     return new Respuesta<Usuario> { IsSuccess = true, Mensaje = "¡Contraseña actualizada satisfactoriamente!" };
