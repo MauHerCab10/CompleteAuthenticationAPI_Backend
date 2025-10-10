@@ -104,7 +104,7 @@ namespace CompleteAuthenticationAPI.Controllers
         }
 
         [Authorize]
-        [HttpPost("ObtenerRefreshToken")] //8vo (no creo q lo llame desde el Frontend)
+        [HttpPost("ObtenerRefreshToken")] //8vo (no creo q deba llamarlo desde el Frontend)
         [ServiceFilter(typeof(AdministradorHeaders))]
         public async Task<IActionResult> ObtenerRefreshToken()
         {
@@ -144,8 +144,8 @@ namespace CompleteAuthenticationAPI.Controllers
         }
 
         [Authorize]
-        [HttpGet("Ping")]
-        [ServiceFilter(typeof(AdministradorHeaders))] //10 (solo para PRUEBAS)
+        [HttpGet("Ping")] //10 (solo para PRUEBAS)
+        [ServiceFilter(typeof(AdministradorHeaders))]
         public IActionResult Ping()
         {
             var idUsuario = HttpContext.Items["IdUsuario"]?.ToString();
