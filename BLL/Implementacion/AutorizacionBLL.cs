@@ -36,9 +36,9 @@ namespace Service.Implementacion
 
         #region Métodos Públicos
         //Genera el AccessToken y el RefreshToken, usando las credenciales de acceso del usuario
-        public async Task<Respuesta<Usuario>> GenerarAccessTokenYRefreshTokenConCredenciales(LoginUsuarioDTO autorizacion)
+        public async Task<Respuesta<Usuario>> GenerarAccessTokenYRefreshTokenConCredenciales(string email)
         {
-            var usuarioEncontrado = await _usuarioDAL.ConsultarUsuario(autorizacion.Email, autorizacion.Contrasena);
+            var usuarioEncontrado = await _usuarioDAL.ConsultarUsuarioPorId(email); //autorizacion.Contrasena
             if (usuarioEncontrado == null)
                 return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "Usuario no encontrado. Favor validar los datos ingresados." };
 
@@ -194,17 +194,29 @@ namespace Service.Implementacion
         //Genera ÚNICAMENTE el RefreshToken
         private string GenerarRefreshToken()
         {
-            var byteArray = new byte[64];
             var refreshToken = "";
+            var byteArray = new byte[64];
 
+            // Generar bytes aleatorios criptográficamente seguros
             using (var rng = RandomNumberGenerator.Create())
-            {
                 rng.GetBytes(byteArray);
-                refreshToken = Convert.ToBase64String(byteArray);
-            }
-            return refreshToken;
-        }
+            
+            // Convertir a Base64 (para transporte seguro en JSON, HTTP, etc.)
+            string base64Token = Convert.ToBase64String(byteArray);
 
+            // Agregar entropía adicional (fecha, GUID)
+            string extraData = Guid.NewGuid().ToString("N") + DateTime.Now.Ticks;
+
+            // Crear un Hash SHA512 para reforzar la integridad del Toekn
+            using (var sha = SHA512.Create())
+            {
+                var combined = Encoding.UTF8.GetBytes(base64Token + extraData);
+                var hash = sha.ComputeHash(combined);
+
+                refreshToken = Convert.ToBase64String(hash);
+                return refreshToken;
+            }
+        }
 
         //Guarda el registro de historial del RefreshToken con el AccesToken
         private async Task<Respuesta<Usuario>> GuardarHistorialRefreshToken(int idUsuario, string accessToken, string refreshToken)

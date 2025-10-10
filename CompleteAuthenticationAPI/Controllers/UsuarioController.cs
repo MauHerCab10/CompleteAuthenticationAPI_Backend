@@ -44,27 +44,14 @@ namespace CompleteAuthenticationAPI.Controllers
             return Ok(new { isSuccess = resultado.IsSuccess, mensaje = resultado.Mensaje });
         }
 
-        [HttpGet("ConfirmarCuenta")] //2do
+        [HttpGet("ConfirmarCuenta")] //2do (ejecutarlo mejor directamente desde el correo)
         public async Task<IActionResult> ConfirmarCuenta(string guidAcceso)
         {
-            bool resultado = await _usuario.ConfirmarCuenta(guidAcceso);
-            return Ok(new { confirmacionCuenta = resultado });
+            Respuesta<Usuario> resultado = await _usuario.ConfirmarCuenta(guidAcceso);
+            return Ok(new { confirmacionCuenta = resultado.IsSuccess, mensaje = resultado.Mensaje });
         }
 
-        [Authorize]
-        [HttpGet("ValidarToken")] //3ro
-        [ServiceFilter(typeof(AdministradorHeaders))]
-        public IActionResult ValidarToken()
-        {
-            bool esTokenValido = false;
-
-            if (Request.Cookies.TryGetValue("cookieAccessToken", out string? token))
-                esTokenValido = _autorizacion.ValidarToken(token);
-            
-            return Ok(new { isSuccess = esTokenValido });
-        }
-
-        [HttpPost("AutenticarUsuario")] //4to
+        [HttpPost("AutenticarUsuario")] //3ro
         public async Task<IActionResult> AutenticarUsuario([FromBody] Usuario pUsuario) //me toca usar 'LoginUsuarioDTO'
         {
             var resultado = await _usuario.AutenticarUsuario(pUsuario);
@@ -80,20 +67,41 @@ namespace CompleteAuthenticationAPI.Controllers
             }
         }
 
-        [HttpPost("RestablecerContrasena")] //5to
-        public async Task<IActionResult> RestablecerContrasena(string email)
+        [HttpPost("OlvidoSuContrasena")] //4to
+        public async Task<IActionResult> OlvidoSuContrasena([FromBody] string email)
         {
-            var resultado = await _usuario.ReestablecerContrasena(email);
+            var resultado = await _usuario.OlvidoSuContrasena(email);
             return Ok(new { isSuccess = resultado.IsSuccess, mensaje = resultado.Mensaje });
         }
 
-        [HttpPost("ActualizarContrasenaAntigua")] //6to
-        public async Task<IActionResult> ActualizarContrasenaAntigua(string guidAcceso, string nuevaContrasena, string confirmacionContrasena)
+        [HttpGet("RestablecerContrasena")] //5to (ejecutarlo mejor directamente desde el correo)
+        public async Task<IActionResult> RestablecerContrasena(string guidAcceso)
         {
-            var resultado = await _usuario.ActualizarContrasenaAntigua(guidAcceso, nuevaContrasena, confirmacionContrasena);
+            var resultado = await _usuario.ConsultarUsuarioPorGuid(guidAcceso);
             return Ok(new { isSuccess = resultado.IsSuccess, mensaje = resultado.Mensaje });
         }
 
+        [HttpPost("ActualizarContrasenaAntigua")] //6to (se puede desde Postman, pero ejecutarlo mejor desde la pantalla de RestablecerContraseña)
+        public async Task<IActionResult> ActualizarContrasenaAntigua([FromBody] ActualizarContrasenaDTO contrasena)
+        {
+            var resultado = await _usuario.ActualizarContrasenaAntigua(contrasena.GuidAcceso, contrasena.NuevaContrasena, contrasena.ConfirmacionContrasena);
+            return Ok(new { isSuccess = resultado.IsSuccess, mensaje = resultado.Mensaje });
+        }
+
+        [Authorize]
+        [HttpGet("ValidarToken")] //7mo
+        [ServiceFilter(typeof(AdministradorHeaders))]
+        public IActionResult ValidarToken()
+        {
+            bool esTokenValido = false;
+
+            if (Request.Cookies.TryGetValue("cookieAccessToken", out string? token))
+                esTokenValido = _autorizacion.ValidarToken(token);
+
+            return Ok(new { isSuccess = esTokenValido });
+        }
+
+        [Authorize]
         [HttpPost("ObtenerRefreshToken")]
         [ServiceFilter(typeof(AdministradorHeaders))]
         public async Task<IActionResult> ObtenerRefreshToken() //[FromBody] RefreshTokenRequest request
@@ -117,6 +125,7 @@ namespace CompleteAuthenticationAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost("CerrarSesion")]
         [ServiceFilter(typeof(AdministradorHeaders))]
         public async Task<IActionResult> CerrarSesion()

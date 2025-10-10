@@ -13,7 +13,7 @@ namespace CompleteAuthenticationAPI.Cookies
             _configuration = configuration;
         }
 
-        //Configuración de AccessToken en cookie HttpOnly
+        //Configuración de AccessToken con cookie HttpOnly
         public void SetCookieAccessToken(string token)
         {
             var context = _httpContextAccessor.HttpContext;
@@ -32,7 +32,7 @@ namespace CompleteAuthenticationAPI.Cookies
             context.Response.Cookies.Append("cookieAccessToken", token, cookieOptions);
         }
 
-        //Configuración de RefreshToken en cookie HttpOnly
+        //Configuración de RefreshToken con cookie HttpOnly
         public void SetCookieRefreshToken(string token)
         {
             var context = _httpContextAccessor.HttpContext;
@@ -51,7 +51,7 @@ namespace CompleteAuthenticationAPI.Cookies
             context.Response.Cookies.Append("cookieRefreshToken", token, cookieOptions);
         }
 
-        //Eliminación de las cookies del navegador del usuario
+        //Eliminación de las cookies en el navegador del usuario
         public void EliminarCookiesDelUsuario()
         {
             var context = _httpContextAccessor.HttpContext;

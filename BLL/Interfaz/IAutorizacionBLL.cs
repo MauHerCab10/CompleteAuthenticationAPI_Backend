@@ -10,7 +10,7 @@ namespace Service.Interfaz
 {
     public interface IAutorizacionBLL
     {
-        Task<Respuesta<Usuario>> GenerarAccessTokenYRefreshTokenConCredenciales(LoginUsuarioDTO autorizacion);
+        Task<Respuesta<Usuario>> GenerarAccessTokenYRefreshTokenConCredenciales(string email);
 
         Task<Respuesta<Usuario>> GenerarAccessTokenYRefreshTokenConRefreshTokenAnterior(int idUsuario, string accessToken, string refreshToken);
 

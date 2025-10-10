@@ -37,6 +37,8 @@ namespace DAL.Implementacion
                         command.Parameters.AddWithValue("@Restablecer", usuario.Restablecer);
                         command.Parameters.AddWithValue("@Confirmado", usuario.Confirmado);
                         command.Parameters.AddWithValue("@GuidAcceso", usuario.GuidAcceso);
+                        command.Parameters.AddWithValue("@FechaCreacionGuid", usuario.FechaCreacionGuid);
+                        command.Parameters.AddWithValue("@FechaExpiracionGuid", usuario.FechaExpiracionGuid);
 
                         if (connection.State == ConnectionState.Closed)
                             await connection.OpenAsync();
@@ -61,20 +63,19 @@ namespace DAL.Implementacion
             }
         }
 
-        public async Task<Usuario> ConsultarUsuario(string email, string? contrasenaHash = null)
+        public async Task<Usuario> ConsultarUsuarioPorGuid(string guidUsuario)
         {
             Usuario? usuario = null;
 
             using (SqlConnection connection = new SqlConnection(cadenaConexion))
             {
-                using (SqlCommand command = new SqlCommand("sp_ConsultarUsuario", connection))
+                using (SqlCommand command = new SqlCommand("sp_ConsultarUsuarioPorGuid", connection))
                 {
                     try
                     {
                         command.CommandType = CommandType.StoredProcedure;
 
-                        command.Parameters.AddWithValue("@Email", email);
-                        command.Parameters.AddWithValue("@ContrasenaHash", contrasenaHash);
+                        command.Parameters.AddWithValue("@GuidUsuario", guidUsuario);
 
                         if (connection.State == ConnectionState.Closed)
                             await connection.OpenAsync();
@@ -91,7 +92,8 @@ namespace DAL.Implementacion
                                     ContrasenaHash = dr["ContrasenaHash"].ToString() ?? "",
                                     Restablecer = Convert.ToBoolean(dr["Restablecer"].ToString()),
                                     Confirmado = Convert.ToBoolean(dr["Confirmado"].ToString()),
-                                    GuidAcceso = dr["GuidAcceso"].ToString() ?? ""
+                                    GuidAcceso = dr["GuidAcceso"].ToString() ?? "",
+                                    GuidActivo = Convert.ToBoolean(dr["EstaActivo"].ToString())
                                 };
                             }
                         }
@@ -111,7 +113,56 @@ namespace DAL.Implementacion
             }
         }
 
-        public async Task<bool> ReestablecerContrasena(int restablecer, int confirmado, string contrasenaHash, string guidAcceso)
+        public async Task<Usuario> ConsultarUsuarioPorId(string email) //string? contrasenaHash = null
+        {
+            Usuario? usuario = null;
+
+            using (SqlConnection connection = new SqlConnection(cadenaConexion))
+            {
+                using (SqlCommand command = new SqlCommand("sp_ConsultarUsuarioPorId", connection))
+                {
+                    try
+                    {
+                        command.CommandType = CommandType.StoredProcedure;
+
+                        command.Parameters.AddWithValue("@Email", email);
+                        if (connection.State == ConnectionState.Closed)
+                            await connection.OpenAsync();
+
+                        using (SqlDataReader dr = await command.ExecuteReaderAsync())
+                        {
+                            if (await dr.ReadAsync())
+                            {
+                                usuario = new Usuario
+                                {
+                                    IdUsuario = Convert.ToInt32(dr["IdUsuario"].ToString()),
+                                    NombreApellido = dr["NombreApellido"].ToString() ?? "",
+                                    Email = dr["Email"].ToString() ?? "",
+                                    ContrasenaHash = dr["ContrasenaHash"].ToString() ?? "",
+                                    Restablecer = Convert.ToBoolean(dr["Restablecer"].ToString()),
+                                    Confirmado = Convert.ToBoolean(dr["Confirmado"].ToString()),
+                                    GuidAcceso = dr["GuidAcceso"].ToString() ?? "",
+                                    GuidActivo = Convert.ToBoolean(dr["EstaActivo"].ToString())
+                                };
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception(ex.Message);
+                    }
+                    finally
+                    {
+                        if (connection.State == ConnectionState.Open)
+                            await connection.CloseAsync();
+                    }
+                }
+
+                return usuario!;
+            }
+        }
+
+        public async Task<bool> RestablecerContrasena(int idUsuario, string newGuidAcceso, DateTime fechaCreacionGuid, DateTime fechaExpiracionGuid)
         {
             bool respuesta = false;
 
@@ -123,10 +174,48 @@ namespace DAL.Implementacion
                     {
                         command.CommandType = CommandType.StoredProcedure;
 
-                        command.Parameters.AddWithValue("@ContrasenaHash", contrasenaHash);
-                        command.Parameters.AddWithValue("@Restablecer", restablecer);
-                        command.Parameters.AddWithValue("@Confirmado", confirmado);
+                        command.Parameters.AddWithValue("@IdUsuario", idUsuario);
+                        command.Parameters.AddWithValue("@GuidAcceso", newGuidAcceso);
+                        command.Parameters.AddWithValue("@FechaCreacionGuid", fechaCreacionGuid);
+                        command.Parameters.AddWithValue("@FechaExpiracionGuid", fechaExpiracionGuid);
+
+                        if (connection.State == ConnectionState.Closed)
+                            await connection.OpenAsync();
+
+                        int regsAfectados = await command.ExecuteNonQueryAsync();
+
+                        if (regsAfectados > 0)
+                            respuesta = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception(ex.Message);
+                    }
+                    finally
+                    {
+                        if (connection.State == ConnectionState.Open)
+                            await connection.CloseAsync();
+                    }
+                }
+
+                return respuesta;
+            }
+        }
+
+        public async Task<bool> ActualizarContrasenaAntigua(string guidAcceso, string contrasenaHash)
+        {
+            bool respuesta = false;
+
+            using (SqlConnection connection = new SqlConnection(cadenaConexion))
+            {
+                using (SqlCommand command = new SqlCommand("sp_ActualizarContrasenaAntigua", connection))
+                {
+                    try
+                    {
+                        command.CommandType = CommandType.StoredProcedure;
+
                         command.Parameters.AddWithValue("@GuidAcceso", guidAcceso);
+                        command.Parameters.AddWithValue("@ContrasenaHash", contrasenaHash);
 
                         if (connection.State == ConnectionState.Closed)
                             await connection.OpenAsync();

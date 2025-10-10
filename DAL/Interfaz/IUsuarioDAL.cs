@@ -11,9 +11,13 @@ namespace DAL.Interfaz
     {
         Task<bool> RegistrarUsuario(Usuario usuario);
 
-        Task<Usuario> ConsultarUsuario(string email, string? contrasenaHash = null);
+        Task<Usuario> ConsultarUsuarioPorGuid(string guidUsuario);
 
-        Task<bool> ReestablecerContrasena(int restablecer, int confirmado, string contrasenaHash, string guidAcceso);
+        Task<Usuario> ConsultarUsuarioPorId(string email); //string? contrasenaHash = null
+
+        Task<bool> RestablecerContrasena(int idUsuario, string newGuidAcceso, DateTime fechaCreacionGuid, DateTime fechaExpiracionGuid);
+
+        Task<bool> ActualizarContrasenaAntigua(string guidAcceso, string contrasenaHash);
 
         Task<bool> ConfirmarCuenta(string guidAcceso);
     }

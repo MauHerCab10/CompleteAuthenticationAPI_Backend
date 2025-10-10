@@ -28,5 +28,11 @@ namespace Transversal.Model
         public string AccessToken { get; set; } = string.Empty;
         
         public string RefreshToken { get; set; } = string.Empty;
+
+        public DateTime FechaCreacionGuid { get; set; }
+
+        public DateTime FechaExpiracionGuid { get; set; }
+
+        public bool GuidActivo { get; set; }
     }
 }

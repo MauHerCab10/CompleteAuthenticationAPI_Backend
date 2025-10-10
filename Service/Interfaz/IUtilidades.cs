@@ -12,7 +12,10 @@ namespace Service.Interfaz
         string GenerarGuid();
         
         string EncriptarContraseña(string contrasena);
-        
+
+        bool VerificarContrasena(string contrasena, string contrasenaHashGuardada);
+
+
         bool EnviarCorreo(InfoCorreo request);
 
         DateTime FechaHoraActualColombia();

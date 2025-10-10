@@ -20,12 +20,12 @@
             // Verificar si es una ruta que requiere autenticación
             if (context.User.Identity?.IsAuthenticated == true)
             {
-                var lastActivity = context.Session.GetString("LastActivity");
+                var userLastActivity = context.Session.GetString($"LastActivity_IdUser_{context.User.Identity.Name}");
                 var now = DateTime.Now;
 
-                if (!string.IsNullOrEmpty(lastActivity))
+                if (!string.IsNullOrEmpty(userLastActivity))
                 {
-                    var lastActivityTime = DateTime.Parse(lastActivity);
+                    var lastActivityTime = DateTime.Parse(userLastActivity);
 
                     TimeSpan elapsedTime = now - lastActivityTime;
                     if (elapsedTime > _timeoutDuration)
@@ -40,7 +40,7 @@
                 }
 
                 // Actualizar último tiempo de actividad
-                context.Session.SetString("LastActivity", now.ToString("O")); //context.User.Identity.Name
+                context.Session.SetString($"LastActivity_IdUser_{context.User.Identity.Name}", now.ToString("O"));
             }
 
             await _next(context);

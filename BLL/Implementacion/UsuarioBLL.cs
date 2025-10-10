@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Configuration;
 using Service.Interfaz;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,7 @@ namespace BLL.Implementacion
 {
     public class UsuarioBLL : IUsuarioBLL
     {
+        private readonly IConfiguration _configuration;
         private readonly IAutorizacionBLL _autorizacionBLL;
         private readonly IUtilidades _utilidades;
         private readonly IUsuarioDAL _usuarioDAL;
@@ -31,8 +33,9 @@ namespace BLL.Implementacion
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public UsuarioBLL(IAutorizacionBLL autorizacionBLL, IUtilidades utilidades, IUsuarioDAL usuarioDAL, IPlantillasCorreoService plantillaCorreo, IMapper mapper, IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor)
+        public UsuarioBLL(IConfiguration configuration, IAutorizacionBLL autorizacionBLL, IUtilidades utilidades, IUsuarioDAL usuarioDAL, IPlantillasCorreoService plantillaCorreo, IMapper mapper, IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor)
         {
+            _configuration = configuration;
             _autorizacionBLL = autorizacionBLL;
             _utilidades = utilidades;
             _usuarioDAL = usuarioDAL;
@@ -42,19 +45,39 @@ namespace BLL.Implementacion
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<Respuesta<Usuario>> ConsultarUsuario(string email, string? contrasena = null)
+        public async Task<Respuesta<Usuario>> ConsultarUsuarioPorGuid(string guidUsuario)
         {
             try
             {
                 Respuesta<Usuario> resultOperacion = new Respuesta<Usuario>
                 {
-                    Objeto = await _usuarioDAL.ConsultarUsuario(email, _utilidades.EncriptarContraseña(contrasena))
+                    Objeto = await _usuarioDAL.ConsultarUsuarioPorGuid(guidUsuario)
+                };
+
+                if (resultOperacion.Objeto == null || !resultOperacion.Objeto.GuidActivo)
+                    return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "GUID no existe o ya se encuentra inválido. Favor solicite el reestablecimiento de contraseña nuevamente." };
+                else
+                    return new Respuesta<Usuario> { IsSuccess = true, Objeto = resultOperacion.Objeto, Mensaje = "¡GUID existe en la BD!" };
+            }
+            catch (Exception e)
+            {
+                return new Respuesta<Usuario> { IsSuccess = false, Mensaje = e.Message };
+            }
+        }
+
+        public async Task<Respuesta<Usuario>> ConsultarUsuarioPorId(string email) //string? contrasena = null
+        {
+            try
+            {
+                Respuesta<Usuario> resultOperacion = new Respuesta<Usuario>
+                {
+                    Objeto = await _usuarioDAL.ConsultarUsuarioPorId(email) //contrasena != null ? _utilidades.EncriptarContraseña(contrasena) : null
                 };
 
                 if (resultOperacion.Objeto == null)
-                    return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "Usuario no encontrado. Favor validar los datos ingresados." };
+                    return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "Usuario no encontrado. Favor validar los datos ingresados." }; //usado para "AutenticarUsuario"
                 else
-                    return new Respuesta<Usuario> { IsSuccess = true, Objeto = resultOperacion.Objeto, Mensaje = "¡Autenticación exitosa!" };
+                    return new Respuesta<Usuario> { IsSuccess = true, Objeto = resultOperacion.Objeto, Mensaje = "¡Usuario existe en la BD!" }; //usado para "RegistrarUsuario"
             }
             catch (Exception e)
             {
@@ -68,11 +91,13 @@ namespace BLL.Implementacion
             {
                 Respuesta<Usuario> resultOperacion = new Respuesta<Usuario>
                 {
-                    Objeto = await _usuarioDAL.ConsultarUsuario(pUsuario.Email, _utilidades.EncriptarContraseña(pUsuario.Contrasena))
+                    Objeto = await _usuarioDAL.ConsultarUsuarioPorId(pUsuario.Email) //_utilidades.EncriptarContraseña(pUsuario.Contrasena)
                 };
 
                 if (resultOperacion.Objeto != null)
                 {
+                    bool contrasenaValidada = _utilidades.VerificarContrasena(pUsuario.Contrasena, resultOperacion.Objeto.ContrasenaHash);
+
                     if (!resultOperacion.Objeto.Confirmado)
                     {
                         return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"Falta confirmar su cuenta. Se le envió un correo a {pUsuario.Email}." };
@@ -81,9 +106,13 @@ namespace BLL.Implementacion
                     {
                         return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"Se ha solicitado restablecer su cuenta. Favor revise la bandeja de su correo {pUsuario.Email}." };
                     }
+                    else if (!contrasenaValidada)
+                    {
+                        return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "La contraseña no coincide con la que hay almacenada en el sistema." };
+                    }
                     else
                     {
-                        resultOperacion = await _autorizacionBLL.GenerarAccessTokenYRefreshTokenConCredenciales(new() { Email = pUsuario.Email, Contrasena = _utilidades.EncriptarContraseña(pUsuario.Contrasena) }); //aqui debo encargarme de enviar un objeto tipo LoginUsuarioDTO
+                        resultOperacion = await _autorizacionBLL.GenerarAccessTokenYRefreshTokenConCredenciales(pUsuario.Email); //Contrasena = _utilidades.EncriptarContraseña(pUsuario.Contrasena) //aqui debo encargarme de enviar un objeto tipo LoginUsuarioDTO
                         return new Respuesta<Usuario> { IsSuccess = true, Objeto = resultOperacion.Objeto, Mensaje = "¡Autenticación exitosa!" };
                     }
                 }
@@ -102,10 +131,10 @@ namespace BLL.Implementacion
         {
             try
             {
-                var existeUsuario = await ConsultarUsuario(pUsuario.Email, _utilidades.EncriptarContraseña(pUsuario.Contrasena));
+                var existeUsuario = await ConsultarUsuarioPorId(pUsuario.Email); //_utilidades.EncriptarContraseña(pUsuario.Contrasena)
 
                 if (existeUsuario.IsSuccess)
-                    return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"El correo electrónico proporcionado ya se encuentra registrado en el sistema." };
+                    return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"El correo electrónico proporcionado ya se encuentra registrado en el sistema. {existeUsuario.Mensaje}" };
 
                 if (string.IsNullOrEmpty(pUsuario.NombreApellido))
                     return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "campo de Nombre y Apellido es obligatorio." };
@@ -129,7 +158,9 @@ namespace BLL.Implementacion
                     ContrasenaHash = pUsuario.ContrasenaHash,
                     Restablecer = pUsuario.Restablecer,
                     Confirmado = pUsuario.Confirmado,
-                    GuidAcceso = pUsuario.GuidAcceso
+                    GuidAcceso = pUsuario.GuidAcceso,
+                    FechaCreacionGuid = _utilidades.FechaHoraActualColombia(),
+                    FechaExpiracionGuid = _utilidades.FechaHoraActualColombia().AddMinutes(_configuration.GetValue<int>("GuidAcceso_ExpirationTime"))
                 };
 
                 var respuesta = await _usuarioDAL.RegistrarUsuario(usuario);
@@ -137,7 +168,6 @@ namespace BLL.Implementacion
                 if (respuesta)
                 {
                     PlantillaCorreo? plantillaCorreo = await ObtenerPlantillaPorEnum(PlantillasCorreoEnum.ConfirmarCorreo);
-
 
                     HttpRequest urlHost = _httpContextAccessor.HttpContext!.Request;
                     string url = $"{urlHost.Scheme}://{urlHost.Host}{urlHost.PathBase}{$"/api/Usuario/ConfirmarCuenta?guidAcceso={pUsuario.GuidAcceso}"}";
@@ -169,22 +199,26 @@ namespace BLL.Implementacion
             }
         }
 
-        public async Task<Respuesta<Usuario>> ReestablecerContrasena(string email)
+        public async Task<Respuesta<Usuario>> OlvidoSuContrasena(string email)
         {
             try
             {
-                var usuarioEncontrado = await ConsultarUsuario(email);
+                var usuarioEncontrado = await ConsultarUsuarioPorId(email);
                 if (usuarioEncontrado.IsSuccess)
                 {
-                    bool respuesta = await _usuarioDAL.ReestablecerContrasena(1, 0, _utilidades.EncriptarContraseña(usuarioEncontrado.Objeto.Contrasena), usuarioEncontrado.Objeto.GuidAcceso);
+                    string newGuidAcceso = _utilidades.GenerarGuid();
+                    DateTime fechaCreacionGuid = _utilidades.FechaHoraActualColombia();
+                    DateTime fechaExpiracionGuid = _utilidades.FechaHoraActualColombia().AddMinutes(_configuration.GetValue<int>("JwtSettings:GuidAcceso_ExpirationTime"));
+
+                    bool respuesta = await _usuarioDAL.RestablecerContrasena(usuarioEncontrado.Objeto.IdUsuario, newGuidAcceso, fechaCreacionGuid, fechaExpiracionGuid);
                     if (respuesta)
                     {
-                        HttpRequest urlHost = _httpContextAccessor.HttpContext!.Request;
-                        string path = Path.Combine(_webHostEnvironment.ContentRootPath, "PlantillasCorreo", "RestablecerContrasena.html");
-                        string content = System.IO.File.ReadAllText(path);
-                        string url = $"{urlHost.Scheme}://{urlHost.Host}{urlHost.PathBase}{$"/api/Usuario/ActualizarContrasenaAntigua?guidAcceso={usuarioEncontrado.Objeto.GuidAcceso}"}";
+                        PlantillaCorreo? plantillaCorreo = await ObtenerPlantillaPorEnum(PlantillasCorreoEnum.RestablecerContrasena);
 
-                        string htmlBody = string.Format(content, usuarioEncontrado.Objeto.NombreApellido, url);
+                        HttpRequest urlHost = _httpContextAccessor.HttpContext!.Request;
+                        string url = $"{urlHost.Scheme}://{urlHost.Host}{urlHost.PathBase}{$"/api/Usuario/RestablecerContrasena?guidAcceso={newGuidAcceso}"}";
+
+                        string htmlBody = string.Format(plantillaCorreo.Cuerpo, usuarioEncontrado.Objeto.NombreApellido, url);
 
                         InfoCorreo correoDTO = new InfoCorreo()
                         {
@@ -196,9 +230,9 @@ namespace BLL.Implementacion
                         bool correoEnviado = _utilidades.EnviarCorreo(correoDTO);
 
                         if (correoEnviado)
-                            return new Respuesta<Usuario> { IsSuccess = true, Mensaje = "Se ha restablecido su contraseña satisfactoriamente." };
+                            return new Respuesta<Usuario> { IsSuccess = true, Mensaje = "La solicitud de reestablecimiento de contraseña fue procesada satisfactoriamente. Por favor revise la bandeja de entrada de su correo electrónico para actualizar su contraseña." };
                         else
-                            return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"¡ERROR! No fue posible reestablecer su contraseña." };
+                            return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"¡ERROR! No fue posible restablecer su contraseña." };
                     }
                     else
                     {
@@ -221,12 +255,13 @@ namespace BLL.Implementacion
             try
             {
                 if (nuevaContrasena != confirmacionContrasena)
-                {
                     return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "Las contraseñas ingresadas no coinciden." };
-                }
+
+                if (nuevaContrasena.Length < 12 || !Regex.IsMatch(nuevaContrasena, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])[^\s]+$"))
+                    return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "Formato de contraseña inválido. La contraseña debe contener 12 caracteres como mínimo, al menos una minúscula, una mayúscula, un número, un caracter especial y no debe contener espacios." };
 
                 string contrasenaEncriptada = _utilidades.EncriptarContraseña(nuevaContrasena);
-                bool respuesta = await _usuarioDAL.ReestablecerContrasena(0, 1, contrasenaEncriptada, guidAcceso);
+                bool respuesta = await _usuarioDAL.ActualizarContrasenaAntigua(guidAcceso, contrasenaEncriptada);
 
                 if (respuesta)
                     return new Respuesta<Usuario> { IsSuccess = true, Mensaje = "¡Contraseña actualizada satisfactoriamente!" };
@@ -239,10 +274,27 @@ namespace BLL.Implementacion
             }
         }
 
-        public async Task<bool> ConfirmarCuenta(string guidAcceso)
+        public async Task<Respuesta<Usuario>> ConfirmarCuenta(string guidAcceso)
         {
-            bool respuesta = await _usuarioDAL.ConfirmarCuenta(guidAcceso);
-            return respuesta;
+            try
+            {
+                bool respuesta = false;
+                var existeGuid = await ConsultarUsuarioPorGuid(guidAcceso);
+
+                if (existeGuid.IsSuccess && !existeGuid.Objeto.Confirmado)
+                    respuesta = await _usuarioDAL.ConfirmarCuenta(guidAcceso);
+                else
+                    return new Respuesta<Usuario> { IsSuccess = false, Mensaje = existeGuid.Mensaje };
+
+                if (respuesta)
+                    return new Respuesta<Usuario> { IsSuccess = true, Mensaje = "¡Confirmación de cuenta realizada satisfactoriamente!" };
+                else
+                    return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"¡ERROR! No se pudo confirmar la cuenta. {existeGuid.Mensaje}" };
+            }
+            catch (Exception e)
+            {
+                return new Respuesta<Usuario> { IsSuccess = false, Mensaje = e.Message };
+            }
         }
 
         public async Task<PlantillaCorreo> ObtenerPlantillaPorEnum(PlantillasCorreoEnum tipoPlantilla)
