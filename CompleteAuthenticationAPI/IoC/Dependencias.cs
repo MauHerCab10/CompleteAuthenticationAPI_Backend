@@ -31,7 +31,7 @@ namespace Transversal.Helper
             // Add services to the container.
 
             services.AddControllers();
-            services.AddAuthentication();
+            //services.AddAuthentication();
             services.AddAuthorization();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -45,7 +45,7 @@ namespace Transversal.Helper
             services.AddHttpContextAccessor();
 
             //Implementación del Automapper (de los modelos de BD a los DTO y viceversa)
-            services.AddAutoMapper(typeof(AutoMapperProfile));
+            services.AddAutoMapper(cfg => cfg.AddProfile<AutoMapperProfile>());
 
             // Configurar sesiones
             services.AddDistributedMemoryCache();
@@ -67,15 +67,6 @@ namespace Transversal.Helper
             services.AddScoped<IPlantillaCorreoDAL, PlantillaCorreoDAL>();
             services.AddScoped<IPlantillasCorreoService, PlantillasCorreoService>();
             services.Configure<ServidorEmail>(configuration.GetSection("ServidorEmail"));
-
-            //Guardar en memoria Caché las Plantillas de los correos
-            services.AddMemoryCache();
-
-            //Capturar la URL del servidor dentro del método de la clase de una biblioteca de clases
-            services.AddHttpContextAccessor();
-
-            //Implementación del Automapper (de los modelos de BD a los DTO y viceversa)
-            services.AddAutoMapper(typeof(AutoMapperProfile));
 
             //JSON Web Token (JWT) configuration
             services.AddAuthentication(options =>

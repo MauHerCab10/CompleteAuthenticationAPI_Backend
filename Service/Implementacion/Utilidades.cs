@@ -56,7 +56,7 @@ namespace Service.Implementacion
             }
         }
 
-        //public string EncriptarContraseña(string contrasena) //método anterior solo con "Hash SHA-256"
+        //public string EncriptarContraseña(string contrasena) //método anterior para hashear una contraseña solo con "SHA-256"
         //{
         //    using (SHA256 sha256 = SHA256.Create())
         //    {

@@ -13,7 +13,7 @@ namespace DAL.Interfaz
 
         Task<Usuario> ConsultarUsuarioPorGuid(string guidUsuario);
 
-        Task<Usuario> ConsultarUsuarioPorId(string email); //string? contrasenaHash = null
+        Task<Usuario> ConsultarUsuarioPorId(string email);
 
         Task<bool> RestablecerContrasena(int idUsuario, string newGuidAcceso, DateTime fechaCreacionGuid, DateTime fechaExpiracionGuid);
 

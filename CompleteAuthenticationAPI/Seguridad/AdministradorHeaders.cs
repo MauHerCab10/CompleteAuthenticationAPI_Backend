@@ -100,7 +100,7 @@ namespace CompleteAuthenticationAPI.Seguridad
                 }
 
                 //Cargar las cookies en el navegador del usuario (quedan actualizadas para la siguiente petición entrante)
-                _cookies.SetCookieAccessToken(autorizacion.Result.Objeto.AccessToken);
+                //_cookies.SetCookieAccessToken(autorizacion.Result.Objeto.AccessToken);
                 _cookies.SetCookieRefreshToken(refreshToken);
 
                 //Variables globales a nivel local del servidor (nunca se envían al Frontend)

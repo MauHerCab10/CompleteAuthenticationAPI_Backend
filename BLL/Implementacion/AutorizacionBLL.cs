@@ -40,7 +40,7 @@ namespace Service.Implementacion
         //Genera el AccessToken y el RefreshToken, usando las credenciales de acceso del usuario
         public async Task<Respuesta<Usuario>> GenerarAccessTokenYRefreshTokenConCredenciales(string email)
         {
-            var usuarioEncontrado = await _usuarioDAL.ConsultarUsuarioPorId(email); //autorizacion.Contrasena
+            var usuarioEncontrado = await _usuarioDAL.ConsultarUsuarioPorId(email);
             if (usuarioEncontrado == null)
                 return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "Usuario no encontrado. Favor validar los datos ingresados." };
 

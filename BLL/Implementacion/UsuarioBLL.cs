@@ -64,13 +64,13 @@ namespace BLL.Implementacion
             }
         }
 
-        public async Task<Respuesta<Usuario>> ConsultarUsuarioPorId(string email) //string? contrasena = null
+        public async Task<Respuesta<Usuario>> ConsultarUsuarioPorId(string email)
         {
             try
             {
                 Respuesta<Usuario> resultOperacion = new Respuesta<Usuario>
                 {
-                    Objeto = await _usuarioDAL.ConsultarUsuarioPorId(email) //contrasena != null ? _utilidades.EncriptarContraseña(contrasena) : null
+                    Objeto = await _usuarioDAL.ConsultarUsuarioPorId(email)
                 };
 
                 if (resultOperacion.Objeto == null)
@@ -90,7 +90,7 @@ namespace BLL.Implementacion
             {
                 Respuesta<Usuario> resultOperacion = new Respuesta<Usuario>
                 {
-                    Objeto = await _usuarioDAL.ConsultarUsuarioPorId(pUsuario.Email) //_utilidades.EncriptarContraseña(pUsuario.Contrasena)
+                    Objeto = await _usuarioDAL.ConsultarUsuarioPorId(pUsuario.Email)
                 };
 
                 if (resultOperacion.Objeto != null)
@@ -111,7 +111,7 @@ namespace BLL.Implementacion
                     }
                     else
                     {
-                        resultOperacion = await _autorizacionBLL.GenerarAccessTokenYRefreshTokenConCredenciales(pUsuario.Email); //Contrasena = _utilidades.EncriptarContraseña(pUsuario.Contrasena) //aqui debo encargarme de enviar un objeto tipo LoginUsuarioDTO
+                        resultOperacion = await _autorizacionBLL.GenerarAccessTokenYRefreshTokenConCredenciales(pUsuario.Email);
                         return new Respuesta<Usuario> { IsSuccess = true, Objeto = resultOperacion.Objeto, Mensaje = "¡Autenticación exitosa!" };
                     }
                 }
@@ -130,7 +130,7 @@ namespace BLL.Implementacion
         {
             try
             {
-                var existeUsuario = await ConsultarUsuarioPorId(pUsuario.Email); //_utilidades.EncriptarContraseña(pUsuario.Contrasena)
+                var existeUsuario = await ConsultarUsuarioPorId(pUsuario.Email);
 
                 if (existeUsuario.IsSuccess)
                     return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"El correo electrónico proporcionado ya se encuentra registrado en el sistema. Favor acceder con sus credenciales de acceso. {existeUsuario.Mensaje}" };

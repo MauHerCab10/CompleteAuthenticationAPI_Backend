@@ -54,10 +54,10 @@ namespace CompleteAuthenticationAPI.Controllers
             var resultado = await _usuario.AutenticarUsuario(pUsuario);
             if (resultado.IsSuccess)
             {
-                _cookies.SetCookieAccessToken(resultado.Objeto.AccessToken);
+                //_cookies.SetCookieAccessToken(resultado.Objeto.AccessToken);
                 _cookies.SetCookieRefreshToken(resultado.Objeto.RefreshToken);
 
-                return Ok(new { isSuccess = resultado.IsSuccess, mensaje = resultado.Mensaje, idUsuario = resultado.Objeto.IdUsuario, accessToken = resultado.Objeto.AccessToken, refreshToken = resultado.Objeto.RefreshToken });
+                return Ok(new { isSuccess = resultado.IsSuccess, mensaje = resultado.Mensaje, idUsuario = resultado.Objeto.IdUsuario, accessToken = resultado.Objeto.AccessToken, /*refreshToken = resultado.Objeto.RefreshToken*/ });
             }
             else
             {
@@ -79,7 +79,7 @@ namespace CompleteAuthenticationAPI.Controllers
             return Ok(new { isSuccess = resultado.IsSuccess, mensaje = resultado.Mensaje });
         }
 
-        [HttpPost("ActualizarContrasenaAntigua")] //6to (se puede desde Postman, pero ejecutarlo mejor desde la pantalla de RestablecerContraseña)
+        [HttpPost("ActualizarContrasenaAntigua")] //6to (ejecutarlo desde la pantalla de RestablecerContraseña)
         public async Task<IActionResult> ActualizarContrasenaAntigua([FromBody] ActualizarContrasenaDTO contrasena)
         {
             var resultado = await _usuario.ActualizarContrasenaAntigua(contrasena.GuidAcceso, contrasena.NuevaContrasena, contrasena.ConfirmacionContrasena);
@@ -87,7 +87,7 @@ namespace CompleteAuthenticationAPI.Controllers
         }
 
         [Authorize]
-        [HttpGet("ValidarToken")] //7mo (no creo q lo llame desde el Frontend)
+        [HttpGet("ValidarToken")] //7mo (no creo q deba llamarlo desde el Frontend)
         [ServiceFilter(typeof(AdministradorHeaders))]
         public IActionResult ValidarToken()
         {
@@ -117,7 +117,7 @@ namespace CompleteAuthenticationAPI.Controllers
             if (resultado.IsSuccess)
             {
                 // Cargar las cookies en el navegador del usuario
-                _cookies.SetCookieAccessToken(resultado.Objeto.AccessToken);
+                //_cookies.SetCookieAccessToken(resultado.Objeto.AccessToken);
                 _cookies.SetCookieRefreshToken(resultado.Objeto.RefreshToken);
 
                 return Ok(resultado);

@@ -13,7 +13,7 @@ namespace BLL.Interfaz
     {
         Task<Respuesta<Usuario>> ConsultarUsuarioPorGuid(string guidUsuario);
 
-        Task<Respuesta<Usuario>> ConsultarUsuarioPorId(string email); //string? contrasena = null
+        Task<Respuesta<Usuario>> ConsultarUsuarioPorId(string email);
 
         Task<Respuesta<Usuario>> AutenticarUsuario(Usuario pUsuario);
         

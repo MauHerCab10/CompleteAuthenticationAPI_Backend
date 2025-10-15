@@ -113,7 +113,7 @@ namespace DAL.Implementacion
             }
         }
 
-        public async Task<Usuario> ConsultarUsuarioPorId(string email) //string? contrasenaHash = null
+        public async Task<Usuario> ConsultarUsuarioPorId(string email)
         {
             Usuario? usuario = null;
 
