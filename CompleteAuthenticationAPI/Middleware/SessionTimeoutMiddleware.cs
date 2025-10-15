@@ -20,7 +20,7 @@
             // Verificar si es una ruta que requiere autenticación
             if (context.User.Identity?.IsAuthenticated == true)
             {
-                var userLastActivity = context.Session.GetString($"LastActivity_IdUser_{context.User.Identity.Name}");
+                var userLastActivity = context.Session.GetString($"LastActivity_IdUser_{context.User.FindFirst("IdUsuario")?.Value}");
                 var now = DateTime.Now;
 
                 if (!string.IsNullOrEmpty(userLastActivity))
@@ -30,7 +30,7 @@
                     TimeSpan elapsedTime = now - lastActivityTime;
                     if (elapsedTime > _timeoutDuration)
                     {
-                        string mensaje = $"Sesión expirada por inactividad para el usuario: '{context.User.Identity.Name}'.";
+                        string mensaje = $"Sesión expirada por inactividad para el usuario: '{context.User.FindFirst("IdUsuario")?.Value}'.";
                         _logger.LogInformation(mensaje);
 
                         context.Session.Clear();
@@ -41,11 +41,16 @@
                 }
 
                 // Actualizar último tiempo de actividad
-                context.Session.SetString($"LastActivity_IdUser_{context.User.Identity.Name}", now.ToString("O"));
+                context.Session.SetString($"LastActivity_IdUser_{context.User.FindFirst("IdUsuario")?.Value}", now.ToString("O"));
             }
 
             await _next(context);
         }
+
+        //private bool ValidarRefreshTokenEstaActivo()
+        //{
+
+        //}
 
     }
 }

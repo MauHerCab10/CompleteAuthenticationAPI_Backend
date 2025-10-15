@@ -1,6 +1,7 @@
 ﻿using Azure.Core;
 using BLL.Interfaz;
 using DAL.Interfaz;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Service.Interfaz;
@@ -25,14 +26,16 @@ namespace Service.Implementacion
         private readonly IUsuarioDAL _usuarioDAL;
         private readonly IAutorizacionDAL _autorizacionDAL;
         private readonly ICookieService _cookies;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public AutorizacionBLL(IConfiguration configuration, IUtilidades utilidades, IUsuarioDAL usuarioDAL, IAutorizacionDAL autorizacionDAL, ICookieService cookies)
+        public AutorizacionBLL(IConfiguration configuration, IUtilidades utilidades, IUsuarioDAL usuarioDAL, IAutorizacionDAL autorizacionDAL, ICookieService cookies, IHttpContextAccessor httpContextAccessor)
         {
             _configuration = configuration;
             _utilidades = utilidades;
             _usuarioDAL = usuarioDAL;
             _autorizacionDAL = autorizacionDAL;
             _cookies = cookies;
+            _httpContextAccessor = httpContextAccessor;
         }
 
 
@@ -56,7 +59,7 @@ namespace Service.Implementacion
         }
 
 
-        //Genera tanto un AccessToken como un RefreshToken con base al RefreshToken del usuario
+        //Genera tanto un AccessToken como un RefreshToken nuevos, con base al RefreshToken del usuario
         public async Task<Respuesta<Usuario>> GenerarAccessTokenYRefreshTokenConRefreshTokenAnterior(int idUsuario, string accessToken, string refreshToken)
         {
             var refreshTokenEncontrado = await ConsultarUltimoHistorialRefreshTokensPorUsuario(idUsuario, accessToken, refreshToken);
@@ -172,7 +175,8 @@ namespace Service.Implementacion
             var keyBytes = Encoding.UTF8.GetBytes(key);
 
             var userClaims = new ClaimsIdentity();
-            userClaims.AddClaim(new Claim(ClaimTypes.NameIdentifier, idUsuario));
+            userClaims.AddClaim(new Claim("IdUsuario", idUsuario));
+            userClaims.AddClaim(new Claim("DireccionIP", ObtenerIpAddressDispositivoSolicitante()));
 
             var credencialesToken = new SigningCredentials(
                 new SymmetricSecurityKey(keyBytes),
@@ -211,7 +215,7 @@ namespace Service.Implementacion
             string base64Token = Convert.ToBase64String(byteArray);
 
             // Agregar entropía adicional (fecha, GUID)
-            string extraData = Guid.NewGuid().ToString("N") + DateTime.Now.Ticks;
+            string extraData = Guid.NewGuid().ToString("N") + ObtenerIpAddressDispositivoSolicitante() + DateTime.Now.Ticks;
 
             // Crear un Hash SHA512 para reforzar la integridad del Toekn
             using (var sha = SHA512.Create())
@@ -303,6 +307,14 @@ namespace Service.Implementacion
         {
             var esExitoso = await _autorizacionDAL.EliminarHistorialRefreshTokensPorUsuario(idUsuario);
             return esExitoso;
+        }
+
+        // Reemplazar el método ObtenerDireccionIP para aceptar una instancia de HttpContext como parámetro
+
+        private string ObtenerIpAddressDispositivoSolicitante()
+        {
+            string ipAddress = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString()!;
+            return ipAddress;
         }
         #endregion Métodos Privados
 

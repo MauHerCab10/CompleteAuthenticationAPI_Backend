@@ -41,7 +41,7 @@ namespace Transversal.Helper
             //Guardar en memoria Caché las Plantillas de los correos
             services.AddMemoryCache();
 
-            //Capturar la URL del servidor dentro del método de la clase de una biblioteca de clases
+            //Capturar el contexto HTTP del servidor para ser usado dentro de la clase de una biblioteca de clases
             services.AddHttpContextAccessor();
 
             //Implementación del Automapper (de los modelos de BD a los DTO y viceversa)

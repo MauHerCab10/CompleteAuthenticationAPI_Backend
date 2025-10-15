@@ -38,14 +38,21 @@ namespace CompleteAuthenticationAPI.Controllers
         public async Task<IActionResult> RegistrarUsuario([FromBody] Usuario pUsuario) //me toca usar 'RegistroUsuarioDTO'
         {
             var resultado = await _usuario.RegistrarUsuario(pUsuario);
-            return Ok(new { isSuccess = resultado.IsSuccess, mensaje = resultado.Mensaje });
+            return Ok(new 
+            { isSuccess = resultado.IsSuccess, 
+                mensaje = resultado.Mensaje 
+            });
         }
 
         [HttpGet("ConfirmarCuenta")] //2do (ejecutarlo mejor directamente desde el correo)
         public async Task<IActionResult> ConfirmarCuenta(string guidAcceso)
         {
             Respuesta<Usuario> resultado = await _usuario.ConfirmarCuenta(guidAcceso);
-            return Ok(new { confirmacionCuenta = resultado.IsSuccess, mensaje = resultado.Mensaje });
+            return Ok(new 
+            { 
+                confirmacionCuenta = resultado.IsSuccess, 
+                mensaje = resultado.Mensaje 
+            });
         }
 
         [HttpPost("AutenticarUsuario")] //3ro
@@ -57,11 +64,22 @@ namespace CompleteAuthenticationAPI.Controllers
                 //_cookies.SetCookieAccessToken(resultado.Objeto.AccessToken);
                 _cookies.SetCookieRefreshToken(resultado.Objeto.RefreshToken);
 
-                return Ok(new { isSuccess = resultado.IsSuccess, mensaje = resultado.Mensaje, idUsuario = resultado.Objeto.IdUsuario, accessToken = resultado.Objeto.AccessToken, /*refreshToken = resultado.Objeto.RefreshToken*/ });
+                return Ok(new 
+                { 
+                    isSuccess = resultado.IsSuccess, 
+                    mensaje = resultado.Mensaje, 
+                    idUsuario = resultado.Objeto.IdUsuario, 
+                    accessToken = resultado.Objeto.AccessToken, 
+                    /*refreshToken = resultado.Objeto.RefreshToken*/ 
+                });
             }
             else
             {
-                return Ok(new { isSuccess = resultado.IsSuccess, mensaje = resultado.Mensaje });
+                return Ok(new 
+                { 
+                    isSuccess = resultado.IsSuccess, 
+                    mensaje = resultado.Mensaje 
+                });
             }
         }
 
@@ -69,21 +87,33 @@ namespace CompleteAuthenticationAPI.Controllers
         public async Task<IActionResult> OlvidoSuContrasena([FromBody] string email)
         {
             var resultado = await _usuario.OlvidoSuContrasena(email);
-            return Ok(new { isSuccess = resultado.IsSuccess, mensaje = resultado.Mensaje });
+            return Ok(new 
+            { 
+                isSuccess = resultado.IsSuccess, 
+                mensaje = resultado.Mensaje 
+            });
         }
 
         [HttpGet("RestablecerContrasena")] //5to (ejecutarlo mejor directamente desde el correo)
         public async Task<IActionResult> RestablecerContrasena(string guidAcceso)
         {
             var resultado = await _usuario.ConsultarUsuarioPorGuid(guidAcceso);
-            return Ok(new { isSuccess = resultado.IsSuccess, mensaje = resultado.Mensaje });
+            return Ok(new 
+            { 
+                isSuccess = resultado.IsSuccess, 
+                mensaje = resultado.Mensaje 
+            });
         }
 
         [HttpPost("ActualizarContrasenaAntigua")] //6to (ejecutarlo desde la pantalla de RestablecerContraseña)
         public async Task<IActionResult> ActualizarContrasenaAntigua([FromBody] ActualizarContrasenaDTO contrasena)
         {
             var resultado = await _usuario.ActualizarContrasenaAntigua(contrasena.GuidAcceso, contrasena.NuevaContrasena, contrasena.ConfirmacionContrasena);
-            return Ok(new { isSuccess = resultado.IsSuccess, mensaje = resultado.Mensaje });
+            return Ok(new 
+            { 
+                isSuccess = resultado.IsSuccess, 
+                mensaje = resultado.Mensaje 
+            });
         }
 
         [Authorize]
@@ -100,7 +130,12 @@ namespace CompleteAuthenticationAPI.Controllers
             if (!string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken))
                 esTokenValido = _autorizacion.ValidarToken(accessToken);
 
-            return Ok(new { isSuccess = esTokenValido, mensaje = $"Cookie_AccessToken: {(string.IsNullOrEmpty(accessToken) ? "VACÍA" : "OK")} / Cookie_RefreshToken: {(string.IsNullOrEmpty(refreshToken) ? "VACÍA" : "OK")}." });
+            return Ok(new 
+            { 
+                isSuccess = esTokenValido, 
+                mensaje = $"Cookie_AccessToken: {(string.IsNullOrEmpty(accessToken) ? "VACÍA" : "OK")} / Cookie_RefreshToken: {(string.IsNullOrEmpty(refreshToken) ? "VACÍA" : "OK")}.", 
+                accessToken 
+            });
         }
 
         [Authorize]
@@ -120,7 +155,12 @@ namespace CompleteAuthenticationAPI.Controllers
                 //_cookies.SetCookieAccessToken(resultado.Objeto.AccessToken);
                 _cookies.SetCookieRefreshToken(resultado.Objeto.RefreshToken);
 
-                return Ok(resultado);
+                return Ok(new 
+                { 
+                    isSuccess = resultado.IsSuccess, 
+                    mensaje = resultado.Mensaje, 
+                    accessToken = resultado.Objeto.AccessToken 
+                });
             }
             else
             {
@@ -155,8 +195,9 @@ namespace CompleteAuthenticationAPI.Controllers
             return Ok(new
             {
                 message = "Pong",
-                timestamp = DateTime.Now.ToString("dd/MMM/yyyy HH:mm:ss"),
-                user = User.Identity?.Name
+                timestamp = DateTime.Now.ToString("dd/MMM/yyyy HH:mm:ss tt"),
+                idUser = idUsuario,
+                accessToken
             });
         }
 

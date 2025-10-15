@@ -29,13 +29,13 @@ namespace CompleteAuthenticationAPI.Seguridad
         {
             try
             {
-                //var headers = context.HttpContext.Request.Headers;
-                //var accessToken = headers["AccessToken"].FirstOrDefault();
-                //var refreshToken = headers["RefreshToken"].FirstOrDefault();
+                //Headers
+                var headers = context.HttpContext.Request.Headers;
+                string accessToken = headers["Authorization"].FirstOrDefault()!.Replace("Bearer ", string.Empty); //AccessToken
 
+                //Cookies
                 var cookies = _httpContextAccessor.HttpContext;
-                cookies!.Request.Cookies.TryGetValue("cookieAccessToken", out string? accessToken);
-                cookies!.Request.Cookies.TryGetValue("cookieRefreshToken", out string? refreshToken);
+                cookies!.Request.Cookies.TryGetValue("cookieRefreshToken", out string? refreshToken); //RefreshToken
 
                 if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(refreshToken))
                 {
@@ -60,13 +60,13 @@ namespace CompleteAuthenticationAPI.Seguridad
 
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var jwt = tokenHandler.ReadJwtToken(accessToken);
-                string idUsuario = jwt.Claims.First(x => x.Type == JwtRegisteredClaimNames.NameId).Value;
+                string idUsuario = jwt.Claims.First(x => x.Type == "IdUsuario").Value;
 
-                DateTime realDatetimeTokenExpiradoSupuestamente = jwt.ValidTo.AddHours(_configuration.GetValue<int>("JwtSettings:CantidadHorasRestarZonaHoraria"));
                 DateTime datetimeActualColombia = _utilidades.FechaHoraActualColombia();
-                DateTime? fechaVencimientoRefreshToken = _autorizacion.ConsultarFechaVencimientoRefreshToken(int.Parse(idUsuario)).Result;
+                DateTime fechaExpiracionAccessToken = jwt.ValidTo.AddHours(_configuration.GetValue<int>("JwtSettings:CantidadHorasRestarZonaHoraria"));
+                DateTime? fechaExpiracionRefreshToken = _autorizacion.ConsultarFechaVencimientoRefreshToken(int.Parse(idUsuario)).Result;
 
-                if (fechaVencimientoRefreshToken is null)
+                if (fechaExpiracionRefreshToken is null)
                 {
                     context.Result = new BadRequestObjectResult(new Respuesta<Usuario>
                     {
@@ -76,7 +76,7 @@ namespace CompleteAuthenticationAPI.Seguridad
                     return;
                 }
 
-                if (fechaVencimientoRefreshToken < datetimeActualColombia)
+                if (fechaExpiracionRefreshToken < datetimeActualColombia)
                 {
                     context.Result = new BadRequestObjectResult(new Respuesta<Usuario>
                     {
