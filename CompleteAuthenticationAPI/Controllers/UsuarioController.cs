@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Azure.Core;
 using BLL.Interfaz;
-using CompleteAuthenticationAPI.Seguridad;
+using CompleteAuthenticationAPI.Middleware;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -118,7 +118,6 @@ namespace CompleteAuthenticationAPI.Controllers
 
         [Authorize]
         [HttpGet("ValidarToken")] //7mo (no creo q deba llamarlo desde el Frontend)
-        [ServiceFilter(typeof(AdministradorHeaders))]
         public IActionResult ValidarToken()
         {
             bool esTokenValido = false;
@@ -140,7 +139,6 @@ namespace CompleteAuthenticationAPI.Controllers
 
         [Authorize]
         [HttpPost("ObtenerRefreshToken")] //8vo (no creo q deba llamarlo desde el Frontend)
-        [ServiceFilter(typeof(AdministradorHeaders))]
         public async Task<IActionResult> ObtenerRefreshToken()
         {
             var idUsuario = HttpContext.Items["IdUsuario"]?.ToString();
@@ -170,7 +168,6 @@ namespace CompleteAuthenticationAPI.Controllers
 
         [Authorize]
         [HttpPost("CerrarSesion")] //9no
-        [ServiceFilter(typeof(AdministradorHeaders))]
         public async Task<IActionResult> CerrarSesion()
         {
             var idUsuario = HttpContext.Items["IdUsuario"]?.ToString();
@@ -185,7 +182,6 @@ namespace CompleteAuthenticationAPI.Controllers
 
         [Authorize]
         [HttpGet("Ping")] //10 (solo para PRUEBAS)
-        [ServiceFilter(typeof(AdministradorHeaders))]
         public IActionResult Ping()
         {
             var idUsuario = HttpContext.Items["IdUsuario"]?.ToString();

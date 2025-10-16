@@ -1,7 +1,6 @@
 ﻿using BLL.Implementacion;
 using BLL.Interfaz;
 using CompleteAuthenticationAPI.Middleware;
-using CompleteAuthenticationAPI.Seguridad;
 using DAL.Implementacion;
 using DAL.Interfaz;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -57,7 +56,6 @@ namespace Transversal.Helper
             });
 
             //Inyección de Dependencias
-            services.AddScoped<AdministradorHeaders>();
             services.AddSingleton<IUtilidades, Utilidades>();
             services.AddScoped<ICookieService, CookieService>();
             services.AddScoped<IUsuarioDAL, UsuarioDAL>();
@@ -160,6 +158,9 @@ namespace Transversal.Helper
             app.UseHsts();
 
             app.UseSession();
+
+            //Middlewares
+            app.UseMiddleware<AdministradorHeadersMiddleware>();
             app.UseMiddleware<SessionTimeoutMiddleware>();
 
             //app.UseAuthentication();

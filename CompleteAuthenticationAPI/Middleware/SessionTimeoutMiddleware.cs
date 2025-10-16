@@ -30,7 +30,7 @@
                     TimeSpan elapsedTime = now - lastActivityTime;
                     if (elapsedTime > _timeoutDuration)
                     {
-                        string mensaje = $"Sesión expirada por inactividad para el usuario: '{context.User.FindFirst("IdUsuario")?.Value}'.";
+                        string mensaje = $"Sesión expirada por inactividad para el usuario: '{context.User.FindFirst("IdUsuario")?.Value}'. Favor volver a iniciar sesión.";
                         _logger.LogInformation(mensaje);
 
                         context.Session.Clear();
@@ -46,11 +46,6 @@
 
             await _next(context);
         }
-
-        //private bool ValidarRefreshTokenEstaActivo()
-        //{
-
-        //}
 
     }
 }
