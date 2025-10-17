@@ -23,8 +23,9 @@ namespace Transversal.Helper
 {
     public static class Dependencias
     {
-        //Dentro del servicio "IServiceCollection" q es creado automaticamente por la aplicación, se le va a agregar este método de "InyectarDependencias"
-        //A este concepto se le llama "método de extensión", pq se le agrega un método nuevo a una clase ya existente
+        //Dentro del servicio "IServiceCollection" q es creado automaticamente por la aplicación, se le va a agregar los métodos de "InyectarDependencias()" y "ConfigurarInicializacionAplicacionWeb()"
+        //A este concepto se le llama "método de extensión", pq se le agrega un método nuevo a una clase q existe por defecto cuando se creó la aplicación
+
         public static void InyectarDependencias(this IServiceCollection services, IConfiguration configuration)
         {
             // Add services to the container.
@@ -37,7 +38,7 @@ namespace Transversal.Helper
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
 
-            //Guardar en memoria Caché las Plantillas de los correos
+            //Guardar en memoria Caché todas las caché de la aplicación (plantillas de los correos y fechas con hora de la última actividad por cada usuario q realice una petición)
             services.AddMemoryCache();
 
             //Capturar el contexto HTTP del servidor para ser usado dentro de la clase de una biblioteca de clases
@@ -50,7 +51,7 @@ namespace Transversal.Helper
             //services.AddDistributedMemoryCache();
             //services.AddSession(options =>
             //{
-            //    // Se le da a la sesión del servidor un tiempo de vida MAYOR q el q tiene "SessionTimeOut", esto evita que el servidor borre la sesión antes de que 'SessionTimeoutMiddleware' la verifique
+            //    // Se le da a la sesión del servidor un tiempo de vida MAYOR q el q tiene "SessionTimeOut", esto evita que el servidor borre la sesión antes de que 'SessionTimeoutMiddleware' la verifique, esto para evitar q se pisen los tiempos
             //    options.IdleTimeout = TimeSpan.FromMinutes(Convert.ToInt32(configuration["SessionTimeOut"]!) + 1);
             //    options.Cookie.HttpOnly = true;
             //    options.Cookie.IsEssential = true;
@@ -107,9 +108,9 @@ namespace Transversal.Helper
                             .Split(" ")
                             .Last();
 
-                        //Si no está en el header, busca como tal en la Cookie
-                        if (string.IsNullOrEmpty(token))
-                            token = context.Request.Cookies["cookieAccessToken"];
+                        ////Si no está en el header, busca como tal en la Cookie
+                        //if (string.IsNullOrEmpty(token))
+                        //    token = context.Request.Cookies["cookieAccessToken"];
                         
                         //Si encontró el valor del AccessToken, entonces lo asigna y lo retorna
                         if (!string.IsNullOrEmpty(token))
@@ -160,7 +161,7 @@ namespace Transversal.Helper
 
             //app.UseSession();
 
-            //Middlewares
+            //Middlewares (el orden de ejecución va de arriba para abajo)
             app.UseMiddleware<AdministradorHeadersMiddleware>();
             app.UseMiddleware<SessionTimeoutMiddleware>();
 

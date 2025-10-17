@@ -8,8 +8,10 @@ namespace Transversal.Model
 {
     public class PlantillaCorreo
     {
-        public string Nombre { get; set; }
-        public string Asunto { get; set; }
-        public string Cuerpo { get; set; }
+        public required string Nombre { get; set; }
+
+        public required string Asunto { get; set; }
+
+        public required string Cuerpo { get; set; }
     }
 }

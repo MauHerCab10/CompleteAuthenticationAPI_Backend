@@ -16,7 +16,7 @@ namespace Service.Implementacion
             _configuration = configuration;
         }
 
-        //Configuración de AccessToken con cookie HttpOnly
+        //Creación de la cookie de AccessToken
         public void SetCookieAccessToken(string token)
         {
             var context = _httpContextAccessor.HttpContext;
@@ -35,7 +35,7 @@ namespace Service.Implementacion
             context.Response.Cookies.Append("cookieAccessToken", token, cookieOptions);
         }
 
-        //Configuración de RefreshToken con cookie HttpOnly
+        //Creación de la cookie de RefreshToken
         public void SetCookieRefreshToken(string token)
         {
             var context = _httpContextAccessor.HttpContext;
@@ -54,7 +54,7 @@ namespace Service.Implementacion
             context.Response.Cookies.Append("cookieRefreshToken", token, cookieOptions);
         }
 
-        //Eliminación de las cookies en el navegador del usuario
+        //Eliminación de las cookies en el navegador del usuario cuando la respuesta llegue al frontend
         public void EliminarCookiesDelUsuario()
         {
             var context = _httpContextAccessor.HttpContext;

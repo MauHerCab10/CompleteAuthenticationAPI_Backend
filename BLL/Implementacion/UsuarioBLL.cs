@@ -44,6 +44,7 @@ namespace BLL.Implementacion
             _httpContextAccessor = httpContextAccessor;
         }
 
+        //Consulta a un usuario por el GUID enviado dentro del link de un correo
         public async Task<Respuesta<Usuario>> ConsultarUsuarioPorGuid(string guidUsuario)
         {
             try
@@ -64,6 +65,7 @@ namespace BLL.Implementacion
             }
         }
 
+        //Consulta a un usuario por su Id (PK identificador de BD)
         public async Task<Respuesta<Usuario>> ConsultarUsuarioPorId(string email)
         {
             try
@@ -84,6 +86,7 @@ namespace BLL.Implementacion
             }
         }
 
+        //Realiza todas las validaciones para permitir el acceso (LogIn) del usuario al sistema
         public async Task<Respuesta<Usuario>> AutenticarUsuario(Usuario pUsuario)
         {
             try
@@ -126,6 +129,7 @@ namespace BLL.Implementacion
             }
         }
 
+        //Realiza todas las validaciones para permitir el registro (SignUp) del usuario en el sistema
         public async Task<Respuesta<Usuario>> RegistrarUsuario(Usuario pUsuario)
         {
             try
@@ -198,6 +202,7 @@ namespace BLL.Implementacion
             }
         }
 
+        //Resetea la contraseña del usuario, para q posteriomente pueda restablecer su contraseña con 'ActualizarContrasenaAntigua()'
         public async Task<Respuesta<Usuario>> OlvidoSuContrasena(string email)
         {
             try
@@ -249,6 +254,7 @@ namespace BLL.Implementacion
             }
         }
 
+        //Actualiza la contraseña antigua (reseteada con 'OlvidoSuContrasena()') del usuario
         public async Task<Respuesta<Usuario>> ActualizarContrasenaAntigua(string guidAcceso, string nuevaContrasena, string confirmacionContrasena)
         {
             try
@@ -273,6 +279,7 @@ namespace BLL.Implementacion
             }
         }
 
+        //Confirma la cuenta del usuario luego de haber recibido el correo de Bienvenida para que ya el sistema le permita loguearse en la aplicación
         public async Task<Respuesta<Usuario>> ConfirmarCuenta(string guidAcceso)
         {
             try
@@ -296,6 +303,7 @@ namespace BLL.Implementacion
             }
         }
 
+        //Retorna la plantilla del correo solicitada, ya sea la de 'RegistrarUsuario' o la de 'OlvidoSuContrasena'
         public async Task<PlantillaCorreo> ObtenerPlantillaPorEnum(PlantillasCorreoEnum tipoPlantilla)
         {
             List<PlantillaCorreo> plantillas = await _plantillaCorreo.CargarPlantillasCorreoDesdeDB();

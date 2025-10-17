@@ -39,18 +39,19 @@ namespace CompleteAuthenticationAPI.Controllers
         {
             var resultado = await _usuario.RegistrarUsuario(pUsuario);
             return Ok(new 
-            { isSuccess = resultado.IsSuccess, 
+            {
+                isSuccess = resultado.IsSuccess, 
                 mensaje = resultado.Mensaje 
             });
         }
 
-        [HttpGet("ConfirmarCuenta")] //2do (ejecutarlo mejor directamente desde el correo)
+        [HttpGet("ConfirmarCuenta")] //2do (ejecutarlo mejor directamente desde el correo recibido)
         public async Task<IActionResult> ConfirmarCuenta(string guidAcceso)
         {
             Respuesta<Usuario> resultado = await _usuario.ConfirmarCuenta(guidAcceso);
             return Ok(new 
-            { 
-                confirmacionCuenta = resultado.IsSuccess, 
+            {
+                isSuccess = resultado.IsSuccess, 
                 mensaje = resultado.Mensaje 
             });
         }
@@ -94,7 +95,7 @@ namespace CompleteAuthenticationAPI.Controllers
             });
         }
 
-        [HttpGet("RestablecerContrasena")] //5to (ejecutarlo mejor directamente desde el correo)
+        [HttpGet("RestablecerContrasena")] //5to (ejecutarlo mejor directamente desde el correo recibido)
         public async Task<IActionResult> RestablecerContrasena(string guidAcceso)
         {
             var resultado = await _usuario.ConsultarUsuarioPorGuid(guidAcceso);
@@ -132,7 +133,7 @@ namespace CompleteAuthenticationAPI.Controllers
             return Ok(new 
             { 
                 isSuccess = esTokenValido, 
-                mensaje = $"Cookie_AccessToken: {(string.IsNullOrEmpty(accessToken) ? "VACÍA" : "OK")} / Cookie_RefreshToken: {(string.IsNullOrEmpty(refreshToken) ? "VACÍA" : "OK")}.", 
+                mensaje = $"Header_AccessToken: {(string.IsNullOrEmpty(accessToken) ? "VACÍA" : "OK")} / Cookie_RefreshToken: {(string.IsNullOrEmpty(refreshToken) ? "VACÍA" : "OK")}.", 
                 accessToken 
             });
         }

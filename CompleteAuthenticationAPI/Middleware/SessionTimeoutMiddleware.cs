@@ -18,10 +18,10 @@ namespace CompleteAuthenticationAPI.Middleware
             _timeoutDuration = TimeSpan.FromMinutes(Convert.ToInt32(configuration["SessionTimeOut"]!));
         }
 
-        //Crea la sesión para el usuario autorizado
+        //Controla el tiempo que el usuario autorizado puede pasar inactivo antes de q se cierre su sesión
         public async Task InvokeAsync(HttpContext context)
         {
-            // Verificar si es una ruta que requiere autenticación
+            //Verifica si el usuario ya se encuentra autenticado para realizar peticiones al servidor
             if (context.User.Identity?.IsAuthenticated == true)
             {
                 var userId = context.User.FindFirst("IdUsuario")?.Value;

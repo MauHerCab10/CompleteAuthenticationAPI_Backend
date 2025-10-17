@@ -30,6 +30,7 @@ namespace Service.Implementacion
             _emailInfo = options.Value;
         }
 
+        //Genera el GUID q va estar incorporado en la URL para 'ConfirmarCuenta' y 'RestablecerContrasena'
         public string GenerarGuid()
         {
             // Generar un GUID único
@@ -51,7 +52,8 @@ namespace Service.Implementacion
                     tokenBuilder.Append(b.ToString("x2"));
                 }
 
-                string token = tokenBuilder.ToString();  //Token final
+                //Token final generado
+                string token = tokenBuilder.ToString();
                 return token;
             }
         }
@@ -72,7 +74,7 @@ namespace Service.Implementacion
         //    }
         //}
 
-        // Encriptar la Contraseña generando un Hash seguro [Hashing con sal + algoritmo lento (PBKDF2, bcrypt o Argon2)] (Argon2 es recomendado por OWASP y NIST)
+        //Encripta la Contraseña generando un Hash seguro [Hashing con salt + algoritmo lento (PBKDF2, bcrypt o Argon2)] (Argon2 es recomendado por OWASP y NIST)
         public string EncriptarContraseña(string contrasena)
         {
             // Salt aleatorio 16 bytes
@@ -82,7 +84,7 @@ namespace Service.Implementacion
             {
                 Type = Argon2Type.HybridAddressing, //Argon2 → más seguro
                 Version = Argon2Version.Nineteen,
-                TimeCost = 4, //Iteraciones (ajusta según el rendimiento del servidor)
+                TimeCost = 4, //Cantidad de iteracione
                 MemoryCost = 1024 * 64, //64 MB de RAM (recomendado)
                 Lanes = 4, //Número de hilos paralelos
                 Threads = Environment.ProcessorCount,
@@ -91,34 +93,36 @@ namespace Service.Implementacion
                 HashLength = 32 //256 bits de salida
             };
 
+            //Contraseña hasheada generada
             string encodedHash = Argon2.Hash(config);
             return encodedHash;
         }
 
-        // Verificar una contraseña con el Hash con sal guardada
+        //Verifica la contraseña con Hash suministrada
         public bool VerificarContrasena(string contrasena, string contrasenaHashGuardada)
         {
             return Argon2.Verify(contrasenaHashGuardada, contrasena);
         }
 
+        //Envia correos electrónicos al usuario
         public bool EnviarCorreo(InfoCorreo request)
         {
             try
             {
-                var email = new MimeMessage();
-                email.From.Add(MailboxAddress.Parse(_emailInfo.Username));
-                email.To.Add(MailboxAddress.Parse(request.Para));
-                email.Subject = request.Asunto;
-                email.Body = new TextPart(TextFormat.Html)
-                {
-                    Text = request.Contenido,
-                };
+                MimeMessage email = new MimeMessage();
+                    email.From.Add(MailboxAddress.Parse(_emailInfo.Username));
+                    email.To.Add(MailboxAddress.Parse(request.Para));
+                    email.Subject = request.Asunto;
+                    email.Body = new TextPart(TextFormat.Html)
+                    {
+                        Text = request.Contenido,
+                    };
 
-                using var smtp = new SmtpClient();
-                smtp.Connect(_emailInfo.Host, Convert.ToInt32(_emailInfo.Port), SecureSocketOptions.StartTls);
-                smtp.Authenticate(_emailInfo.Username, _emailInfo.Password);
-                smtp.Send(email);
-                smtp.Disconnect(true);
+                SmtpClient smtp = new SmtpClient();
+                    smtp.Connect(_emailInfo.Host, Convert.ToInt32(_emailInfo.Port), SecureSocketOptions.StartTls);
+                    smtp.Authenticate(_emailInfo.Username, _emailInfo.Password);
+                    smtp.Send(email);
+                    smtp.Disconnect(true);
 
                 return true;
             }
@@ -128,7 +132,7 @@ namespace Service.Implementacion
             }
         }
 
-        // Obtiene la hora actual en zona horaria de Colombia
+        // Obtiene la hora actual de la zona horaria de 'Colombia'
         public DateTime FechaHoraActualColombia()
         {
             var colombiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(_configuration.GetValue<string>("JwtSettings:TimeZone")!);

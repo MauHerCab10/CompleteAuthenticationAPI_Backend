@@ -15,7 +15,6 @@ namespace Service.Interfaz
 
         bool VerificarContrasena(string contrasena, string contrasenaHashGuardada);
 
-
         bool EnviarCorreo(InfoCorreo request);
 
         DateTime FechaHoraActualColombia();

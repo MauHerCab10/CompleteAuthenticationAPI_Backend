@@ -26,6 +26,7 @@ namespace Service.Implementacion
             _correoPlantillaDAL = correoPlantillaDAL;
         }
 
+        //Obtiene de BD las plantillas de los correos a enviar ('ConfirmarCorreo' y 'RestablecerContrasena') y las deja cargadas en caché para posteriores usos
         public async Task<List<PlantillaCorreo>> CargarPlantillasCorreoDesdeDB()
         {
             if (!_cache.TryGetValue(_configuration["Plantillas_Correos_Cache_Key"]!, out List<PlantillaCorreo>? plantillas))
@@ -34,7 +35,7 @@ namespace Service.Implementacion
 
                 var cacheOptions = new MemoryCacheEntryOptions
                 {
-                    AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24), //crear un archivo de recursos (.resx) para este tipo de valores quemados
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24), //setear este valor quemado en AppSettings
                     Priority = CacheItemPriority.High
                 };
 

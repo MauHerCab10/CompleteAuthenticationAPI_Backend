@@ -99,7 +99,7 @@ namespace Service.Implementacion
         {
             var refreshTokenEncontrado = await ConsultarUltimoHistorialRefreshTokensPorUsuario(idUsuario);
 
-            return refreshTokenEncontrado == null ? null : refreshTokenEncontrado.FechaExpiracion;
+            return refreshTokenEncontrado?.FechaExpiracion;
         }
 
 
@@ -131,7 +131,7 @@ namespace Service.Implementacion
         }
 
 
-        //Valida si el AccessToken ingresado es válido para realizar peticiones
+        //Valida si el AccessToken ingresado es válido para realizar peticiones q requieran autorización
         public bool ValidarToken(string accessToken)
         {
             TokenValidationParameters validationParameters = new TokenValidationParameters
@@ -248,7 +248,7 @@ namespace Service.Implementacion
                 return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "¡Error al momento de generar el AccessToken y el RefreshToken!", Objeto = null! };
         }
 
-        //Actualiza ÚNICAMENTE el AccessToken del RefreshToken encontrado
+        //Actualiza ÚNICAMENTE el AccessToken con base en el RefreshToken encontrado
         private async Task<Respuesta<Usuario>> ActualizaHistorialRefreshToken(string anteriorAccessToken, string nuevoAccessToken, HistorialRefreshToken historialExistente)
         {
             var historialEncontrado = await ConsultarUltimoHistorialRefreshTokensPorUsuario(historialExistente.IdUsuario, anteriorAccessToken, historialExistente.RefreshToken);
@@ -281,36 +281,35 @@ namespace Service.Implementacion
             };
         }
 
-        // Consulta el último historial de Token que ha generado el usuario
+        //Consulta el último historial de Token que ha generado el usuario
         private async Task<HistorialRefreshToken> ConsultarUltimoHistorialRefreshTokensPorUsuario(int idUsuario, string? accessToken = null, string? refreshToken = null)
         {
             var ultimoAcceso = await _autorizacionDAL.ConsultarUltimoHistorialRefreshTokensPorUsuario(idUsuario, accessToken, refreshToken);
             return ultimoAcceso;
         }
 
-        // Guarda el AccessToken y el RefreshToken del usuario
+        //Guarda el historial de los nuevos tokens del usuario (AccessToken y RefreshToken)
         private async Task<bool> GuardarHistorialRefreshTokenDeUsuario(int idUsuario, string accessToken, string refreshToken, DateTime fechaCreacion, DateTime fechaExpiracion)
         {
             bool esExitoso = await _autorizacionDAL.GuardarHistorialRefreshTokenDeUsuario(idUsuario, accessToken, refreshToken, fechaCreacion, fechaExpiracion);
             return esExitoso;
         }
 
-        // Actualiza el AccessToken del usuario
+        //Actualiza el AccessToken del usuario
         private async Task<bool> ActualizarHistorialRefreshTokenDeUsuario(int idHistorialToken, string accessToken)
         {
             var esExitoso = await _autorizacionDAL.ActualizarHistorialRefreshTokenDeUsuario(idHistorialToken, accessToken);
             return esExitoso;
         }
 
-        // Elimina todo el historial completo de Tokens que ha generado el usuario a lo largo del tiempo
+        //Elimina todo el historial completo de tokens que ha generado el usuario a lo largo del tiempo
         private async Task<bool> EliminarHistorialRefreshTokensPorUsuario(int idUsuario)
         {
             var esExitoso = await _autorizacionDAL.EliminarHistorialRefreshTokensPorUsuario(idUsuario);
             return esExitoso;
         }
 
-        // Reemplazar el método ObtenerDireccionIP para aceptar una instancia de HttpContext como parámetro
-
+        //Obtiene la Dirección IP del dispositivo del cual se genera la solicitud entrante
         private string ObtenerIpAddressDispositivoSolicitante()
         {
             string ipAddress = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString()!;

@@ -21,11 +21,12 @@ namespace CompleteAuthenticationAPI.Middleware
             _logger = logger;
         }
 
+        //Realiza validaciones previas al acceso sobre cualquier endpoint que requiera autorización
         public async Task InvokeAsync(HttpContext context, ICookieService cookies, IConfiguration configuration, IAutorizacionBLL autorizacion, IUtilidades utilidades)
         {
             try
             {
-                //Verificar si el endpoint requiere autorización
+                //Verificar si el endpoint del cual se hace la solicitud requiere autorización
                 var endpoint = context.GetEndpoint();
 
                 //Si el endpoint no existe, o no tiene [Authorize] o tiene [AllowAnonymous], entonces saltamos este middleware
@@ -82,11 +83,11 @@ namespace CompleteAuthenticationAPI.Middleware
                     return;
                 }
 
-                //Si el AccessToken ya está vencido, pero el RefreshToken sigue aun vigente, se procede a crear un nuevo AccessToken
+                //Si el AccessToken ya está vencido, pero el RefreshToken sigue aún vigente, se procede a crear un nuevo AccessToken
                 Task<Respuesta<Usuario>> respuesta = Task.Run(() => new Respuesta<Usuario>());
                 if (fechaExpiracionAccessToken < datetimeActualColombia && fechaExpiracionRefreshToken > datetimeActualColombia)
                 {
-                    //Por cada petición que requiera autenticación (AccessToken de por medio), se actualiza el AccessToken para mantenerle refrescando su tiempo de expiración en el servidor debido a su corto tiempo de vida
+                    //Por cada petición que requiera autenticación (AccessToken de por medio), se genera un nuevo AccessToken para refrescar su tiempo de expiración, esto debido a su corto tiempo de vida
                     respuesta = autorizacion.ActualizarAccessTokenConRefreshTokenAnterior(int.Parse(idUsuario), accessToken, refreshToken);
 
                     if (!respuesta.Result.IsSuccess)
@@ -110,7 +111,7 @@ namespace CompleteAuthenticationAPI.Middleware
                 //_cookies.SetCookieAccessToken(autorizacion.Result.Objeto.AccessToken);
                 cookies.SetCookieRefreshToken(refreshToken);
 
-                //Variables globales a nivel local del servidor (nunca se envían al Frontend)
+                //Variables globales para uso a nivel local en el servidor (nunca se envían al Frontend)
                 context.Items["IdUsuario"] = idUsuario;
                 context.Items["AccessToken"] = newAccessToken;
                 context.Items["RefreshToken"] = refreshToken;
