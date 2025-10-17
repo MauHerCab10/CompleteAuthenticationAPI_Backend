@@ -46,14 +46,15 @@ namespace Transversal.Helper
             //Implementación del Automapper (de los modelos de BD a los DTO y viceversa)
             services.AddAutoMapper(cfg => cfg.AddProfile<AutoMapperProfile>());
 
-            // Configurar sesiones
-            services.AddDistributedMemoryCache();
-            services.AddSession(options =>
-            {
-                options.IdleTimeout = TimeSpan.FromMinutes(Convert.ToInt32(configuration["SessionTimeOut"]!));
-                options.Cookie.HttpOnly = true;
-                options.Cookie.IsEssential = true;
-            });
+            //// Configurar sesiones
+            //services.AddDistributedMemoryCache();
+            //services.AddSession(options =>
+            //{
+            //    // Se le da a la sesión del servidor un tiempo de vida MAYOR q el q tiene "SessionTimeOut", esto evita que el servidor borre la sesión antes de que 'SessionTimeoutMiddleware' la verifique
+            //    options.IdleTimeout = TimeSpan.FromMinutes(Convert.ToInt32(configuration["SessionTimeOut"]!) + 1);
+            //    options.Cookie.HttpOnly = true;
+            //    options.Cookie.IsEssential = true;
+            //});
 
             //Inyección de Dependencias
             services.AddSingleton<IUtilidades, Utilidades>();
@@ -157,7 +158,7 @@ namespace Transversal.Helper
             app.UseHttpsRedirection();
             app.UseHsts();
 
-            app.UseSession();
+            //app.UseSession();
 
             //Middlewares
             app.UseMiddleware<AdministradorHeadersMiddleware>();
