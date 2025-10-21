@@ -55,7 +55,7 @@ namespace BLL.Implementacion
                 };
 
                 if (resultOperacion.Objeto == null || !resultOperacion.Objeto.GuidActivo)
-                    return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "GUID no existe o ya se encuentra inválido. Favor solicite el reestablecimiento de contraseña nuevamente." };
+                    return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "GUID no existe o ya se encuentra inválido. Favor solicite el reestablecimiento de su contraseña." };
                 else
                     return new Respuesta<Usuario> { IsSuccess = true, Objeto = resultOperacion.Objeto, Mensaje = "¡GUID existe en la BD!" };
             }
@@ -100,13 +100,13 @@ namespace BLL.Implementacion
                 {
                     bool contrasenaValidada = _utilidades.VerificarContrasena(pUsuario.Contrasena, resultOperacion.Objeto.ContrasenaHash);
 
-                    if (!resultOperacion.Objeto.Confirmado)
+                    if (!resultOperacion.Objeto.Confirmado && !resultOperacion.Objeto.Restablecer && !string.IsNullOrEmpty(resultOperacion.Objeto.ContrasenaHash))
                     {
-                        return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"Falta confirmar su cuenta. Se le envió un correo a {pUsuario.Email}." };
+                        return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"Falta por confirmar su cuenta. Se le envió un correo a '{pUsuario.Email}'." };
                     }
-                    else if (resultOperacion.Objeto.Restablecer)
+                    else if (resultOperacion.Objeto.Restablecer && !resultOperacion.Objeto.Confirmado && string.IsNullOrEmpty(resultOperacion.Objeto.ContrasenaHash))
                     {
-                        return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"Se ha solicitado restablecer su cuenta. Favor revise la bandeja de su correo {pUsuario.Email}." };
+                        return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"Se ha solicitado restablecer su cuenta. Favor revise la bandeja de su correo '{pUsuario.Email}'." };
                     }
                     else if (!contrasenaValidada)
                     {
@@ -120,7 +120,7 @@ namespace BLL.Implementacion
                 }
                 else
                 {
-                    return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "No se encontraron coincidencias con esas credenciales." };
+                    return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "No se encontraron coincidencias con esas credenciales. Favor revisar la data con la que está intentando acceder al sistema." };
                 }
             }
             catch (Exception e)

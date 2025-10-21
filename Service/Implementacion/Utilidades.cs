@@ -84,7 +84,7 @@ namespace Service.Implementacion
             {
                 Type = Argon2Type.HybridAddressing, //Argon2 → más seguro
                 Version = Argon2Version.Nineteen,
-                TimeCost = 4, //Cantidad de iteracione
+                TimeCost = 4, //Cantidad de iteraciones
                 MemoryCost = 1024 * 64, //64 MB de RAM (recomendado)
                 Lanes = 4, //Número de hilos paralelos
                 Threads = Environment.ProcessorCount,
