@@ -140,7 +140,7 @@ namespace BLL.Implementacion
                     return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"El correo electrónico proporcionado ya se encuentra registrado en el sistema. Favor acceder con sus credenciales de acceso. {existeUsuario.Mensaje}" };
 
                 if (string.IsNullOrEmpty(pUsuario.NombreApellido))
-                    return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "campo de Nombre y Apellido es obligatorio." };
+                    return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "Campo de Nombre y Apellido es obligatorio." };
 
                 if (!Regex.IsMatch(pUsuario.Email, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"))
                     return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "Formato de correo electrónico inválido." };
