@@ -137,7 +137,7 @@ namespace BLL.Implementacion
                 var existeUsuario = await ConsultarUsuarioPorId(pUsuario.Email);
 
                 if (existeUsuario.IsSuccess)
-                    return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"El correo electrónico proporcionado ya se encuentra registrado en el sistema. Favor acceder con sus credenciales de acceso. {existeUsuario.Mensaje}" };
+                    return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"El correo electrónico proporcionado ya se encuentra registrado en el sistema. Favor acceder con sus credenciales de acceso." };
 
                 if (string.IsNullOrEmpty(pUsuario.NombreApellido))
                     return new Respuesta<Usuario> { IsSuccess = false, Mensaje = "Campo de Nombre y Apellido es obligatorio." };
@@ -189,11 +189,11 @@ namespace BLL.Implementacion
                     if (correoEnviado)
                         return new Respuesta<Usuario> { IsSuccess = true, Mensaje = $"Su cuenta ha sido creada satisfactoriamente. Hemos enviado un mensaje al correo '{pUsuario.Email}' para confirmar su cuenta." };
                     else
-                        return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"¡ERROR! No fue posible enviar el correo a '{pUsuario.Email}'." };
+                        return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"No fue posible enviar el correo a '{pUsuario.Email}'." };
                 }
                 else
                 {
-                    return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"¡ERROR! No se pudo crear su cuenta." };
+                    return new Respuesta<Usuario> { IsSuccess = false, Mensaje = $"No se pudo crear su cuenta." };
                 }
             }
             catch (Exception e)

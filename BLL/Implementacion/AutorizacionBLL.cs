@@ -176,7 +176,8 @@ namespace Service.Implementacion
 
             var userClaims = new ClaimsIdentity();
             userClaims.AddClaim(new Claim("IdUsuario", idUsuario));
-            userClaims.AddClaim(new Claim("DireccionIP", ObtenerIpAddressDispositivoSolicitante()));
+            userClaims.AddClaim(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
+            //userClaims.AddClaim(new Claim("DireccionIP", ObtenerIpAddressDispositivoSolicitante()));
 
             var credencialesToken = new SigningCredentials(
                 new SymmetricSecurityKey(keyBytes),
@@ -215,7 +216,7 @@ namespace Service.Implementacion
             string base64Token = Convert.ToBase64String(byteArray);
 
             // Agregar entropía adicional (fecha, GUID)
-            string extraData = Guid.NewGuid().ToString("N") + ObtenerIpAddressDispositivoSolicitante() + DateTime.Now.Ticks;
+            string extraData = Guid.NewGuid().ToString("N") + DateTime.Now.Ticks; //ObtenerIpAddressDispositivoSolicitante()
 
             // Crear un Hash SHA512 para reforzar la integridad del Toekn
             using (var sha = SHA512.Create())

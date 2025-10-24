@@ -53,6 +53,18 @@ namespace CompleteAuthenticationAPI.Middleware
                     return;
                 }
 
+                bool esValido_AccessToken = autorizacion.ValidarToken(accessToken);
+                if (!esValido_AccessToken)
+                {
+                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                    await context.Response.WriteAsJsonAsync(new
+                    {
+                        IsSuccess = false,
+                        Mensaje = "AccessToken procesado es inválido."
+                    });
+                    return;
+                }
+
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var jwt = tokenHandler.ReadJwtToken(accessToken);
                 string idUsuario = jwt.Claims.First(x => x.Type == "IdUsuario").Value;

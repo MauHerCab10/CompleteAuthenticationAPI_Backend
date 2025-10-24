@@ -27,7 +27,7 @@ namespace Service.Implementacion
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.None, //None (para pruebas en localhost)
                 Expires = DateTimeOffset.UtcNow.AddMinutes(_configuration.GetValue<int>("JwtSettings:AccessToken_ExpirationTime")), //AccessToken
                 Path = "/"
             };
@@ -46,7 +46,7 @@ namespace Service.Implementacion
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.None, //None (para pruebas en localhost)
                 Expires = DateTimeOffset.UtcNow.AddMinutes(_configuration.GetValue<int>("JwtSettings:RefreshToken_ExpirationTime")), //RefreshToken
                 Path = "/"
             };
@@ -61,8 +61,21 @@ namespace Service.Implementacion
             if (context == null)
                 throw new InvalidOperationException("No HttpContext available [EliminarCookiesDelUsuario].");
 
-            context.Response.Cookies.Delete("cookieAccessToken");
-            context.Response.Cookies.Delete("cookieRefreshToken");
+            context.Response.Cookies.Delete("cookieAccessToken", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Path = "/"
+            });
+
+            context.Response.Cookies.Delete("cookieRefreshToken", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Path = "/"
+            });
         }
 
     }

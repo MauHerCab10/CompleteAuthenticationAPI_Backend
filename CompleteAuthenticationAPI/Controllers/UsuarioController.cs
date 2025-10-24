@@ -118,7 +118,7 @@ namespace CompleteAuthenticationAPI.Controllers
         }
 
         [Authorize]
-        [HttpGet("ValidarToken")] //7mo (no creo q deba llamarlo desde el Frontend)
+        [HttpGet("ValidarToken")] //7mo (se llama por cada petición q el Frontend le haga al Backend) (ya no lo llamo)
         public IActionResult ValidarToken()
         {
             bool esTokenValido = false;
