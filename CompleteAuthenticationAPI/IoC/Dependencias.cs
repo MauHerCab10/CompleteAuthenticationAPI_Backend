@@ -133,8 +133,8 @@ namespace Transversal.Helper
                 {
                     app
                     .WithOrigins(
-                        "http://localhost:4200",  //Desarrollo
-                        "https://miwebapp.com"  //Producción
+                        configuration["Frontend_URLs:Desarrollo"]!,
+                        configuration["Frontend_URLs:Produccion"]!
                      )
                     .AllowCredentials() //permite cargar las cookies en el navegador
                     .AllowAnyHeader()

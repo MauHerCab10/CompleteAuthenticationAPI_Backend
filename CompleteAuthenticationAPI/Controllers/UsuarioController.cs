@@ -22,12 +22,14 @@ namespace CompleteAuthenticationAPI.Controllers
     [ApiController]
     public class UsuarioController : ControllerBase
     {
+        private readonly IConfiguration _configuration;
         private readonly IUsuarioBLL _usuario;
         private readonly IAutorizacionBLL _autorizacion;
         private readonly ICookieService _cookies;
 
-        public UsuarioController(IUsuarioBLL usuarioBLL, IAutorizacionBLL autorizacionBLL, ICookieService cookies)
+        public UsuarioController(IConfiguration configuration, IUsuarioBLL usuarioBLL, IAutorizacionBLL autorizacionBLL, ICookieService cookies)
         {
+            _configuration = configuration;
             _usuario = usuarioBLL;
             _autorizacion = autorizacionBLL;
             _cookies = cookies;
@@ -35,9 +37,9 @@ namespace CompleteAuthenticationAPI.Controllers
 
 
         [HttpPost("RegistrarUsuario")] //1ro
-        public async Task<IActionResult> RegistrarUsuario([FromBody] Usuario pUsuario) //me toca usar 'RegistroUsuarioDTO'
+        public async Task<IActionResult> RegistrarUsuario([FromBody] Usuario usuario) //me toca usar 'RegistroUsuarioDTO'
         {
-            var resultado = await _usuario.RegistrarUsuario(pUsuario);
+            var resultado = await _usuario.RegistrarUsuario(usuario);
             return Ok(new 
             {
                 isSuccess = resultado.IsSuccess, 
@@ -49,17 +51,13 @@ namespace CompleteAuthenticationAPI.Controllers
         public async Task<IActionResult> ConfirmarCuenta(string guidAcceso)
         {
             Respuesta<Usuario> resultado = await _usuario.ConfirmarCuenta(guidAcceso);
-            return Ok(new 
-            {
-                isSuccess = resultado.IsSuccess, 
-                mensaje = resultado.Mensaje 
-            });
+            return Redirect($"{_configuration.GetValue<string>("Frontend_URLs:Desarrollo")}/login?confirmacion={(resultado.IsSuccess ? "ok" : "error")}");
         }
 
         [HttpPost("AutenticarUsuario")] //3ro
-        public async Task<IActionResult> AutenticarUsuario([FromBody] Usuario pUsuario) //me toca usar 'LoginUsuarioDTO'
+        public async Task<IActionResult> AutenticarUsuario([FromBody] Usuario usuario) //me toca usar 'LoginUsuarioDTO'
         {
-            var resultado = await _usuario.AutenticarUsuario(pUsuario);
+            var resultado = await _usuario.AutenticarUsuario(usuario);
             if (resultado.IsSuccess)
             {
                 //_cookies.SetCookieAccessToken(resultado.Objeto.AccessToken);
@@ -85,28 +83,17 @@ namespace CompleteAuthenticationAPI.Controllers
         }
 
         [HttpPost("OlvidoSuContrasena")] //4to
-        public async Task<IActionResult> OlvidoSuContrasena([FromBody] string email)
+        public async Task<IActionResult> OlvidoSuContrasena([FromBody] EmailDTO email)
         {
-            var resultado = await _usuario.OlvidoSuContrasena(email);
-            return Ok(new 
-            { 
-                isSuccess = resultado.IsSuccess, 
-                mensaje = resultado.Mensaje 
+            var resultado = await _usuario.OlvidoSuContrasena(email.Email);
+            return Ok(new
+            {
+                isSuccess = resultado.IsSuccess,
+                mensaje = resultado.Mensaje
             });
         }
 
-        [HttpGet("RestablecerContrasena")] //5to (ejecutarlo mejor directamente desde el correo recibido)
-        public async Task<IActionResult> RestablecerContrasena(string guidAcceso)
-        {
-            var resultado = await _usuario.ConsultarUsuarioPorGuid(guidAcceso);
-            return Ok(new 
-            { 
-                isSuccess = resultado.IsSuccess, 
-                mensaje = resultado.Mensaje 
-            });
-        }
-
-        [HttpPost("ActualizarContrasenaAntigua")] //6to (ejecutarlo desde la pantalla de RestablecerContraseña)
+        [HttpPost("ActualizarContrasenaAntigua")] //5to
         public async Task<IActionResult> ActualizarContrasenaAntigua([FromBody] ActualizarContrasenaDTO contrasena)
         {
             var resultado = await _usuario.ActualizarContrasenaAntigua(contrasena.GuidAcceso, contrasena.NuevaContrasena, contrasena.ConfirmacionContrasena);
@@ -118,28 +105,7 @@ namespace CompleteAuthenticationAPI.Controllers
         }
 
         [Authorize]
-        [HttpGet("ValidarToken")] //7mo (se llama por cada petición q el Frontend le haga al Backend) (ya no lo llamo)
-        public IActionResult ValidarToken()
-        {
-            bool esTokenValido = false;
-
-            var idUsuario = HttpContext.Items["IdUsuario"]?.ToString();
-            var accessToken = HttpContext.Items["AccessToken"]?.ToString();
-            var refreshToken = HttpContext.Items["RefreshToken"]?.ToString();
-
-            if (!string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken))
-                esTokenValido = _autorizacion.ValidarToken(accessToken);
-
-            return Ok(new 
-            { 
-                isSuccess = esTokenValido, 
-                mensaje = $"Header_AccessToken: {(string.IsNullOrEmpty(accessToken) ? "VACÍA" : "OK")} / Cookie_RefreshToken: {(string.IsNullOrEmpty(refreshToken) ? "VACÍA" : "OK")}.", 
-                accessToken 
-            });
-        }
-
-        [Authorize]
-        [HttpPost("ObtenerRefreshToken")] //8vo (no creo q deba llamarlo desde el Frontend)
+        [HttpPost("ObtenerRefreshToken")] //6to (llamarlo desde el Frontend solo en algun caso de extrema de necesidad)
         public async Task<IActionResult> ObtenerRefreshToken()
         {
             var idUsuario = HttpContext.Items["IdUsuario"]?.ToString();
@@ -168,7 +134,7 @@ namespace CompleteAuthenticationAPI.Controllers
         }
 
         [Authorize]
-        [HttpPost("CerrarSesion")] //9no
+        [HttpPost("CerrarSesion")] //7mo
         public async Task<IActionResult> CerrarSesion()
         {
             var idUsuario = HttpContext.Items["IdUsuario"]?.ToString();
@@ -182,7 +148,7 @@ namespace CompleteAuthenticationAPI.Controllers
         }
 
         [Authorize]
-        [HttpGet("Ping")] //10 (solo para PRUEBAS)
+        [HttpGet("Ping")] //8vo (solo para PRUEBAS)
         public IActionResult Ping()
         {
             var idUsuario = HttpContext.Items["IdUsuario"]?.ToString();

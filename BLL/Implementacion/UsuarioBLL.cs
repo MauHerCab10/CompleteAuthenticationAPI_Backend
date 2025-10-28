@@ -220,7 +220,8 @@ namespace BLL.Implementacion
                         PlantillaCorreo? plantillaCorreo = await ObtenerPlantillaPorEnum(PlantillasCorreoEnum.RestablecerContrasena);
 
                         HttpRequest urlHost = _httpContextAccessor.HttpContext!.Request;
-                        string url = $"{urlHost.Scheme}://{urlHost.Host}{urlHost.PathBase}{$"/api/Usuario/RestablecerContrasena?guidAcceso={newGuidAcceso}"}";
+                        string url = $"{_configuration.GetValue<string>("Frontend_URLs:Desarrollo")}/{$"password?guidAcceso={newGuidAcceso}"}"; //desde Frontend
+                        //string url = $"{urlHost.Scheme}://{urlHost.Host}{urlHost.PathBase}{$"/api/Usuario/RestablecerContrasena?guidAcceso={newGuidAcceso}"}"; //desde Backend
 
                         string htmlBody = string.Format(plantillaCorreo.Cuerpo, usuarioEncontrado.Objeto.NombreApellido, url);
 
