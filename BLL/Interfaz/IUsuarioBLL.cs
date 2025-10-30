@@ -11,20 +11,14 @@ namespace BLL.Interfaz
 {
     public interface IUsuarioBLL
     {
-        Task<Respuesta<Usuario>> ConsultarUsuarioPorGuid(string guidUsuario);
-
-        Task<Respuesta<Usuario>> ConsultarUsuarioPorId(string email);
-
-        Task<Respuesta<Usuario>> AutenticarUsuario(Usuario pUsuario);
+        Task<Respuesta<UsuarioResponseDTO>> AutenticarUsuario(UsuarioLoginRequestDTO dtoUsuario);
         
-        Task<Respuesta<Usuario>> RegistrarUsuario(Usuario pUsuario);
+        Task<Respuesta<UsuarioResponseDTO>> RegistrarUsuario(UsuarioRegistroRequestDTO dtoUsuario);
         
-        Task<Respuesta<Usuario>> OlvidoSuContrasena(string email);
+        Task<Respuesta<UsuarioResponseDTO>> OlvidoSuContrasena(string email);
                 
-        Task<Respuesta<Usuario>> ActualizarContrasenaAntigua(string guidAcceso, string nuevaContrasena, string confirmacionContrasena);
+        Task<Respuesta<UsuarioResponseDTO>> ActualizarContrasenaAntigua(string guidAcceso, string nuevaContrasena, string confirmacionContrasena);
 
-        Task<Respuesta<Usuario>> ConfirmarCuenta(string guidAcceso);
-        
-        Task<PlantillaCorreo> ObtenerPlantillaPorEnum(PlantillasCorreoEnum tipoPlantilla);
+        Task<Respuesta<UsuarioResponseDTO>> ConfirmarCuenta(string guidAcceso);
     }
 }

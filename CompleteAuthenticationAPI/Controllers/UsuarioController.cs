@@ -36,8 +36,8 @@ namespace CompleteAuthenticationAPI.Controllers
         }
 
 
-        [HttpPost("RegistrarUsuario")] //1ro
-        public async Task<IActionResult> RegistrarUsuario([FromBody] Usuario usuario) //me toca usar 'RegistroUsuarioDTO'
+        [HttpPost("RegistrarUsuario")] //1ro (Sign Up)
+        public async Task<IActionResult> RegistrarUsuario([FromBody] UsuarioRegistroRequestDTO usuario)
         {
             var resultado = await _usuario.RegistrarUsuario(usuario);
             return Ok(new 
@@ -50,12 +50,12 @@ namespace CompleteAuthenticationAPI.Controllers
         [HttpGet("ConfirmarCuenta")] //2do (ejecutarlo mejor directamente desde el correo recibido)
         public async Task<IActionResult> ConfirmarCuenta(string guidAcceso)
         {
-            Respuesta<Usuario> resultado = await _usuario.ConfirmarCuenta(guidAcceso);
+            Respuesta<UsuarioResponseDTO> resultado = await _usuario.ConfirmarCuenta(guidAcceso);
             return Redirect($"{_configuration.GetValue<string>("Frontend_URLs:Desarrollo")}/login?confirmacion={(resultado.IsSuccess ? "ok" : "error")}");
         }
 
-        [HttpPost("AutenticarUsuario")] //3ro
-        public async Task<IActionResult> AutenticarUsuario([FromBody] Usuario usuario) //me toca usar 'LoginUsuarioDTO'
+        [HttpPost("AutenticarUsuario")] //3ro (Sign In)
+        public async Task<IActionResult> AutenticarUsuario([FromBody] UsuarioLoginRequestDTO usuario)
         {
             var resultado = await _usuario.AutenticarUsuario(usuario);
             if (resultado.IsSuccess)
@@ -105,7 +105,7 @@ namespace CompleteAuthenticationAPI.Controllers
         }
 
         [Authorize]
-        [HttpPost("ObtenerRefreshToken")] //6to (llamarlo desde el Frontend solo en algun caso de extrema de necesidad)
+        [HttpPost("ObtenerRefreshToken")] //6to (no lo uso en el Frontend, pero llamarlo solo en caso de extrema de necesidad)
         public async Task<IActionResult> ObtenerRefreshToken()
         {
             var idUsuario = HttpContext.Items["IdUsuario"]?.ToString();

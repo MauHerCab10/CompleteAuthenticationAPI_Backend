@@ -13,8 +13,13 @@ namespace Transversal.Helper
     {
         public AutoMapperProfile()
         {
-            //Usuario
-            CreateMap<RegistroUsuarioDTO, Usuario>().ReverseMap();
+            #region Usuario
+            CreateMap<Usuario, UsuarioRegistroRequestDTO>().ReverseMap();
+
+            CreateMap<Usuario, UsuarioLoginRequestDTO>().ReverseMap();
+            
+            CreateMap<Usuario, UsuarioResponseDTO>().ReverseMap();
+            #endregion Usuario
         }
 
     }

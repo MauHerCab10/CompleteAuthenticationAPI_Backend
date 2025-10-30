@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Transversal.DTOs
 {
-    public class LoginUsuarioDTO
+    public class UsuarioLoginRequestDTO
     {
         public required string Email { get; set; }
 
