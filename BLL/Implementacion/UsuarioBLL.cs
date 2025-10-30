@@ -50,24 +50,22 @@ namespace BLL.Implementacion
         {
             try
             {
-                Usuario usuario = _mapper.Map<Usuario>(dtoUsuario);
-
                 Respuesta<Usuario> resultOperacion = new Respuesta<Usuario>
                 {
-                    Objeto = await _usuarioDAL.ConsultarUsuarioPorId(usuario.Email)
+                    Objeto = await _usuarioDAL.ConsultarUsuarioPorId(dtoUsuario.Email)
                 };
 
                 if (resultOperacion.Objeto != null)
                 {
-                    bool contrasenaValidada = _utilidades.VerificarContrasena(usuario.Contrasena, resultOperacion.Objeto.ContrasenaHash);
+                    bool contrasenaValidada = _utilidades.VerificarContrasena(dtoUsuario.Contrasena, resultOperacion.Objeto.ContrasenaHash);
 
                     if (!resultOperacion.Objeto.Confirmado && !resultOperacion.Objeto.Restablecer && !string.IsNullOrEmpty(resultOperacion.Objeto.ContrasenaHash))
                     {
-                        return new Respuesta<UsuarioResponseDTO> { IsSuccess = false, Mensaje = $"Falta por confirmar su cuenta. Se le envió un correo de solicitud de confirmación a '{usuario.Email}'." };
+                        return new Respuesta<UsuarioResponseDTO> { IsSuccess = false, Mensaje = $"Falta por confirmar su cuenta. Se le envió un correo de solicitud de confirmación a '{dtoUsuario.Email}'." };
                     }
                     else if (resultOperacion.Objeto.Restablecer && !resultOperacion.Objeto.Confirmado && string.IsNullOrEmpty(resultOperacion.Objeto.ContrasenaHash))
                     {
-                        return new Respuesta<UsuarioResponseDTO> { IsSuccess = false, Mensaje = $"Se ha solicitado restablecer su cuenta. Favor revise la bandeja de su correo '{usuario.Email}'." };
+                        return new Respuesta<UsuarioResponseDTO> { IsSuccess = false, Mensaje = $"Se ha solicitado restablecer su cuenta. Favor revise la bandeja de su correo '{dtoUsuario.Email}'." };
                     }
                     else if (!contrasenaValidada)
                     {
@@ -75,7 +73,7 @@ namespace BLL.Implementacion
                     }
                     else
                     {
-                        resultOperacion = await _autorizacionBLL.GenerarAccessTokenYRefreshTokenConCredenciales(usuario.Email);
+                        resultOperacion = await _autorizacionBLL.GenerarAccessTokenYRefreshTokenConCredenciales(dtoUsuario.Email);
                         return new Respuesta<UsuarioResponseDTO> { IsSuccess = true, Objeto = _mapper.Map<UsuarioResponseDTO>(resultOperacion.Objeto), Mensaje = "¡Autenticación exitosa!" };
                     }
                 }
