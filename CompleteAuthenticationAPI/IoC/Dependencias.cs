@@ -163,7 +163,7 @@ namespace Transversal.Helper
 
             //Middlewares (el orden de ejecución va de arriba para abajo)
             app.UseMiddleware<AdministradorHeadersMiddleware>();
-            app.UseMiddleware<SessionTimeoutMiddleware>();
+            //app.UseMiddleware<SessionTimeoutMiddleware>(); //se apaga ya q en el Frontend se valida la actividad del usuario (este middleware solo tiene en cuenta las peticiones q lleguen al Backend)
 
             //app.UseAuthentication();
             app.UseAuthorization();
