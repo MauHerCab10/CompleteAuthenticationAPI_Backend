@@ -104,37 +104,37 @@ namespace CompleteAuthenticationAPI.Controllers
             });
         }
 
+        //[Authorize]
+        //[HttpPost("ObtenerRefreshToken")] //6to (no lo uso en el Frontend, pero usarlo solo en caso de extrema de necesidad)
+        //public async Task<IActionResult> ObtenerRefreshToken()
+        //{
+        //    var idUsuario = HttpContext.Items["IdUsuario"]?.ToString();
+        //    var accessToken = HttpContext.Items["AccessToken"]?.ToString();
+        //    var refreshToken = HttpContext.Items["RefreshToken"]?.ToString();
+
+        //    var resultado = await _autorizacion.GenerarAccessTokenYRefreshTokenConRefreshTokenAnterior(int.Parse(idUsuario!), accessToken!, refreshToken!);
+
+        //    if (resultado.IsSuccess)
+        //    {
+        //        // Cargar las cookies en el navegador del usuario
+        //        //_cookies.SetCookieAccessToken(resultado.Objeto.AccessToken);
+        //        _cookies.SetCookieRefreshToken(resultado.Objeto.RefreshToken);
+
+        //        return Ok(new 
+        //        { 
+        //            isSuccess = resultado.IsSuccess, 
+        //            mensaje = resultado.Mensaje, 
+        //            accessToken = resultado.Objeto.AccessToken 
+        //        });
+        //    }
+        //    else
+        //    {
+        //        return BadRequest(resultado);
+        //    }
+        //}
+
         [Authorize]
-        [HttpPost("ObtenerRefreshToken")] //6to (no lo uso en el Frontend, pero llamarlo solo en caso de extrema de necesidad)
-        public async Task<IActionResult> ObtenerRefreshToken()
-        {
-            var idUsuario = HttpContext.Items["IdUsuario"]?.ToString();
-            var accessToken = HttpContext.Items["AccessToken"]?.ToString();
-            var refreshToken = HttpContext.Items["RefreshToken"]?.ToString();
-
-            var resultado = await _autorizacion.GenerarAccessTokenYRefreshTokenConRefreshTokenAnterior(int.Parse(idUsuario!), accessToken!, refreshToken!);
-
-            if (resultado.IsSuccess)
-            {
-                // Cargar las cookies en el navegador del usuario
-                //_cookies.SetCookieAccessToken(resultado.Objeto.AccessToken);
-                _cookies.SetCookieRefreshToken(resultado.Objeto.RefreshToken);
-
-                return Ok(new 
-                { 
-                    isSuccess = resultado.IsSuccess, 
-                    mensaje = resultado.Mensaje, 
-                    accessToken = resultado.Objeto.AccessToken 
-                });
-            }
-            else
-            {
-                return BadRequest(resultado);
-            }
-        }
-
-        [Authorize]
-        [HttpPost("CerrarSesion")] //7mo
+        [HttpPost("CerrarSesion")] //6to
         public async Task<IActionResult> CerrarSesion()
         {
             var idUsuario = HttpContext.Items["IdUsuario"]?.ToString();
@@ -148,7 +148,7 @@ namespace CompleteAuthenticationAPI.Controllers
         }
 
         [Authorize]
-        [HttpGet("Ping")] //8vo (solo para PRUEBAS)
+        [HttpGet("Ping")] //7mo (solo para PRUEBAS)
         public IActionResult Ping()
         {
             var idUsuario = HttpContext.Items["IdUsuario"]?.ToString();
