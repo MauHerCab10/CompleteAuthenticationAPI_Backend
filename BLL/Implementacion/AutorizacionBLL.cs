@@ -141,7 +141,7 @@ namespace Service.Implementacion
                 ValidIssuer = _configuration["JwtSettings:Issuer"], //valor esperado del emisor, tomado de appsettings.json (JwtSettings:Issuer)
                 ValidateAudience = true, //asegura que el token esté destinado a esta API
                 ValidAudience = _configuration["JwtSettings:Audience"], //valor esperado de la audiencia (JwtSettings:Audience)
-                ValidateLifetime = true, //controla si el tiempo de vida del Token será verificado durante la validación
+                ValidateLifetime = false, //controla si el tiempo de vida del Token será verificado durante la validación (lo valido manualmente en AdministradorHeadersMiddleware)
                 ClockSkew = TimeSpan.Zero, //elimina la tolerancia por desfase de reloj
                 NameClaimType = ClaimTypes.NameIdentifier, //indican qué claim se usará como nombre del usuario
                 RoleClaimType = ClaimTypes.Role, //indican qué claim se usará como rol del usuario
@@ -189,8 +189,8 @@ namespace Service.Implementacion
                 Subject = userClaims,
                 Issuer = _configuration.GetValue<string>("JwtSettings:Issuer"),
                 Audience = _configuration.GetValue<string>("JwtSettings:Audience"),
-                NotBefore = _utilidades.FechaHoraActualColombia(),
-                Expires = _utilidades.FechaHoraActualColombia().AddMinutes(_configuration.GetValue<int>("JwtSettings:AccessToken_ExpirationTime")), //AccessToken
+                NotBefore = DateTime.UtcNow,
+                Expires = DateTime.UtcNow.AddMinutes(_configuration.GetValue<int>("JwtSettings:AccessToken_ExpirationTime")), //AccessToken
                 SigningCredentials = credencialesToken
             };
 

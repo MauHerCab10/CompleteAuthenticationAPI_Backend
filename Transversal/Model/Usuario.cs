@@ -34,5 +34,7 @@ namespace Transversal.Model
         public DateTime FechaExpiracionGuid { get; set; }
 
         public bool GuidActivo { get; set; }
+
+        public bool GuidValidado { get; set; }
     }
 }

@@ -111,12 +111,12 @@ namespace BLL.Implementacion
                 //Nuevo usuario
                 Usuario usuario = _mapper.Map<Usuario>(dtoUsuario);
                 usuario.ContrasenaHash = _utilidades.EncriptarContraseña(dtoUsuario.Contrasena);
-                usuario.GuidAcceso = _utilidades.GenerarGuid();
                 usuario.Restablecer = false;
                 usuario.Confirmado = false;
+                usuario.GuidAcceso = _utilidades.GenerarGuid();
                 usuario.FechaCreacionGuid = _utilidades.FechaHoraActualColombia();
                 usuario.FechaExpiracionGuid = usuario.FechaCreacionGuid.AddMinutes(_configuration.GetValue<int>("GuidAcceso_ExpirationTime"));
-                usuario.GuidActivo = true;
+                usuario.GuidValidado = false;
 
                 var respuesta = await _usuarioDAL.RegistrarUsuario(usuario);
 
@@ -131,8 +131,8 @@ namespace BLL.Implementacion
 
                     InfoCorreo infoCorreo = new InfoCorreo()
                     {
-                        Para = usuario.Email,
                         Asunto = plantillaCorreo.Asunto,
+                        Para = usuario.Email,
                         Contenido = htmlBody
                     };
 
@@ -166,7 +166,19 @@ namespace BLL.Implementacion
                     DateTime fechaCreacionGuid = _utilidades.FechaHoraActualColombia();
                     DateTime fechaExpiracionGuid = _utilidades.FechaHoraActualColombia().AddMinutes(_configuration.GetValue<int>("GuidAcceso_ExpirationTime"));
 
-                    bool respuesta = await _usuarioDAL.RestablecerContrasena(usuarioEncontrado.Objeto.IdUsuario, newGuidAcceso, fechaCreacionGuid, fechaExpiracionGuid);
+                    Usuario usuarioRestablecido = new Usuario
+                    {
+                        IdUsuario = usuarioEncontrado.Objeto.IdUsuario,
+                        GuidAcceso = newGuidAcceso,
+                        FechaCreacionGuid = fechaCreacionGuid,
+                        FechaExpiracionGuid = fechaExpiracionGuid,
+                        ContrasenaHash = string.Empty,
+                        Restablecer = true,
+                        Confirmado = true,
+                        GuidValidado = false
+                    };
+
+                    bool respuesta = await _usuarioDAL.RestablecerContrasena(usuarioRestablecido);
                     if (respuesta)
                     {
                         PlantillaCorreo? plantillaCorreo = await ObtenerPlantillaPorEnum(PlantillasCorreoEnum.RestablecerContrasena);
@@ -179,8 +191,8 @@ namespace BLL.Implementacion
 
                         InfoCorreo correoDTO = new InfoCorreo()
                         {
+                            Asunto = plantillaCorreo.Asunto,
                             Para = usuarioEncontrado.Objeto.Email,
-                            Asunto = "Restablecer contraseña",
                             Contenido = htmlBody
                         };
 
@@ -189,11 +201,11 @@ namespace BLL.Implementacion
                         if (correoEnviado)
                             return new Respuesta<UsuarioResponseDTO> { IsSuccess = true, Mensaje = "La solicitud de reestablecimiento de contraseña fue procesada satisfactoriamente. Por favor revise la bandeja de entrada de su correo electrónico para actualizar su contraseña." };
                         else
-                            return new Respuesta<UsuarioResponseDTO> { IsSuccess = false, Mensaje = $"¡ERROR! No fue posible restablecer su contraseña." };
+                            return new Respuesta<UsuarioResponseDTO> { IsSuccess = false, Mensaje = $"¡ERROR! No fue posible procesar su solicitud de envío de correo para el cambio de contraseña." };
                     }
                     else
                     {
-                        return new Respuesta<UsuarioResponseDTO> { IsSuccess = false, Mensaje = $"¡ERROR! No se pudo restablecer su cuenta." };
+                        return new Respuesta<UsuarioResponseDTO> { IsSuccess = false, Mensaje = $"¡ERROR! No se pudo restablecer su contraseña." };
                     }
                 }
                 else
@@ -218,13 +230,19 @@ namespace BLL.Implementacion
                 if (nuevaContrasena.Length < 12 || !Regex.IsMatch(nuevaContrasena, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])[^\s]+$"))
                     return new Respuesta<UsuarioResponseDTO> { IsSuccess = false, Mensaje = "Formato de contraseña inválido. La contraseña debe contener 12 caracteres como mínimo, al menos una minúscula, una mayúscula, un número, un caracter especial y no debe contener espacios." };
 
+                var existeGuid = await ConsultarUsuarioPorGuid(guidAcceso);
+                if (!existeGuid.IsSuccess)
+                    return new Respuesta<UsuarioResponseDTO> { IsSuccess = false, Mensaje = "Solicitud no existe o ya se encuentra inválida." };
+                else if (existeGuid.IsSuccess && (existeGuid.Objeto.GuidValidado || !existeGuid.Objeto.GuidActivo))
+                    return new Respuesta<UsuarioResponseDTO> { IsSuccess = false, Mensaje = "¡El enlace por el cual solicitaste el cambio de contraseña ya se encuentra inválido, ha expirado, o ya habías realizado un cambio de contraseña anteriormente usando este correo!" };
+
                 string contrasenaHash = _utilidades.EncriptarContraseña(nuevaContrasena);
                 bool respuesta = await _usuarioDAL.ActualizarContrasenaAntigua(guidAcceso, contrasenaHash);
 
                 if (respuesta)
                     return new Respuesta<UsuarioResponseDTO> { IsSuccess = true, Mensaje = "¡Contraseña actualizada satisfactoriamente!" };
                 else
-                    return new Respuesta<UsuarioResponseDTO> { IsSuccess = false, Mensaje = "¡ERROR! No se pudo actualizar la contraseña." };
+                    return new Respuesta<UsuarioResponseDTO> { IsSuccess = false, Mensaje = "¡ERROR! No se pudo actualizar la contraseña. Favor usar el correo con la última solicitud de cambio de contraseña generada." };
             }
             catch (Exception e)
             {

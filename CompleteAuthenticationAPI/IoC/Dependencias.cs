@@ -88,7 +88,7 @@ namespace Transversal.Helper
                     ValidIssuer = configuration["JwtSettings:Issuer"], //valor esperado del emisor (JwtSettings:Issuer)
                     ValidateAudience = true, //asegura que el token esté destinado a esta API
                     ValidAudience = configuration["JwtSettings:Audience"], //valor esperado de la audiencia (JwtSettings:Audience)
-                    ValidateLifetime = true, //controla si el tiempo de vida del Token será verificado durante la validación
+                    ValidateLifetime = false, //controla si el tiempo de vida del Token será verificado durante la validación (lo valido manualmente en AdministradorHeadersMiddleware)
                     ClockSkew = TimeSpan.Zero, //elimina la tolerancia por desfase de reloj
                     NameClaimType = ClaimTypes.NameIdentifier, //indican qué claim se usará como nombre del usuario
                     RoleClaimType = ClaimTypes.Role, //indican qué claim se usará como rol del usuario

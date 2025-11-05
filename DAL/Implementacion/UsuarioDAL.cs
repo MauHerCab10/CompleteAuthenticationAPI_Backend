@@ -37,9 +37,10 @@ namespace DAL.Implementacion
                         command.Parameters.AddWithValue("@Restablecer", usuario.Restablecer);
                         command.Parameters.AddWithValue("@Confirmado", usuario.Confirmado);
                         command.Parameters.AddWithValue("@GuidAcceso", usuario.GuidAcceso);
+                        command.Parameters.AddWithValue("@GuidValidado", usuario.GuidValidado);
                         command.Parameters.AddWithValue("@FechaCreacionGuid", usuario.FechaCreacionGuid);
                         command.Parameters.AddWithValue("@FechaExpiracionGuid", usuario.FechaExpiracionGuid);
-
+                        
                         if (connection.State == ConnectionState.Closed)
                             await connection.OpenAsync();
 
@@ -93,6 +94,7 @@ namespace DAL.Implementacion
                                     Restablecer = Convert.ToBoolean(dr["Restablecer"].ToString()),
                                     Confirmado = Convert.ToBoolean(dr["Confirmado"].ToString()),
                                     GuidAcceso = dr["GuidAcceso"].ToString() ?? "",
+                                    GuidValidado = Convert.ToBoolean(dr["Validado"].ToString()),
                                     GuidActivo = Convert.ToBoolean(dr["EstaActivo"].ToString())
                                 };
                             }
@@ -142,6 +144,7 @@ namespace DAL.Implementacion
                                     Restablecer = Convert.ToBoolean(dr["Restablecer"].ToString()),
                                     Confirmado = Convert.ToBoolean(dr["Confirmado"].ToString()),
                                     GuidAcceso = dr["GuidAcceso"].ToString() ?? "",
+                                    GuidValidado = Convert.ToBoolean(dr["Validado"].ToString()),
                                     GuidActivo = Convert.ToBoolean(dr["EstaActivo"].ToString())
                                 };
                             }
@@ -162,7 +165,7 @@ namespace DAL.Implementacion
             }
         }
 
-        public async Task<bool> RestablecerContrasena(int idUsuario, string newGuidAcceso, DateTime fechaCreacionGuid, DateTime fechaExpiracionGuid)
+        public async Task<bool> RestablecerContrasena(Usuario usuarioRestablecido)
         {
             bool respuesta = false;
 
@@ -174,10 +177,14 @@ namespace DAL.Implementacion
                     {
                         command.CommandType = CommandType.StoredProcedure;
 
-                        command.Parameters.AddWithValue("@IdUsuario", idUsuario);
-                        command.Parameters.AddWithValue("@GuidAcceso", newGuidAcceso);
-                        command.Parameters.AddWithValue("@FechaCreacionGuid", fechaCreacionGuid);
-                        command.Parameters.AddWithValue("@FechaExpiracionGuid", fechaExpiracionGuid);
+                        command.Parameters.AddWithValue("@IdUsuario", usuarioRestablecido.IdUsuario);
+                        command.Parameters.AddWithValue("@GuidAcceso", usuarioRestablecido.GuidAcceso);
+                        command.Parameters.AddWithValue("@FechaCreacionGuid", usuarioRestablecido.FechaCreacionGuid);
+                        command.Parameters.AddWithValue("@FechaExpiracionGuid", usuarioRestablecido.FechaExpiracionGuid);
+                        command.Parameters.AddWithValue("@ContrasenaHash", usuarioRestablecido.ContrasenaHash);
+                        command.Parameters.AddWithValue("@Restablecer", usuarioRestablecido.Restablecer);
+                        command.Parameters.AddWithValue("@Confirmado", usuarioRestablecido.Confirmado);
+                        command.Parameters.AddWithValue("@GuidValidado", usuarioRestablecido.GuidValidado);
 
                         if (connection.State == ConnectionState.Closed)
                             await connection.OpenAsync();
