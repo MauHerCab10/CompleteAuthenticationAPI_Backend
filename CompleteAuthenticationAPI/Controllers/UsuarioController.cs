@@ -160,6 +160,7 @@ namespace CompleteAuthenticationAPI.Controllers
                 message = "Pong",
                 timestamp = DateTime.Now.ToString("dd/MMM/yyyy HH:mm:ss tt"),
                 idUser = idUsuario,
+                refreshToken,
                 accessToken
             });
         }
