@@ -27,7 +27,7 @@ namespace CompleteAuthenticationAPI
             builder.Services.InyectarDependencias(builder.Configuration);
 
             //Configuración e Inicialización de la Aplicación Web
-            builder.Services.ConfigurarInicializacionAplicacionWeb(builder.Build());
+            builder.Services.ConfigurarInicializacionAplicacionWeb(builder.Configuration, builder.Build());
         }
     }
 }

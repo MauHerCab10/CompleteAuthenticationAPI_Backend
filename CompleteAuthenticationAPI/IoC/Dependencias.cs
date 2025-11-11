@@ -144,7 +144,7 @@ namespace Transversal.Helper
 
         }
 
-        public static void ConfigurarInicializacionAplicacionWeb(this IServiceCollection services, WebApplication app)
+        public static void ConfigurarInicializacionAplicacionWeb(this IServiceCollection services, IConfiguration configuration, WebApplication app)
         {
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -164,6 +164,31 @@ namespace Transversal.Helper
             //Middlewares (el orden de ejecución va de arriba para abajo)
             app.UseMiddleware<AdministradorHeadersMiddleware>();
             //app.UseMiddleware<SessionTimeoutMiddleware>(); //se apaga ya q en el Frontend se valida la actividad del usuario (este middleware solo tiene en cuenta las peticiones q lleguen al Backend)
+
+            //Content Security Policy (CSP) -> middleware global de seguridad
+            app.Use(async (context, next) =>
+            {
+                string csp;
+
+                if (app.Environment.IsDevelopment())
+                {
+                    csp = "default-src 'self'; " +
+                          $"connect-src 'self' {configuration["Frontend_URLs:Desarrollo"]!}; " +
+                          "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+                          "style-src 'self' 'unsafe-inline';";
+                }
+                else
+                {
+                    csp = "default-src 'self'; " +
+                          $"connect-src 'self' {configuration["Frontend_URLs:Produccion"]!}; " +
+                          "script-src 'self'; " +
+                          "style-src 'self';";
+                }
+
+                context.Response.Headers["Content-Security-Policy"] = csp;
+
+                await next();
+            });
 
             //app.UseAuthentication();
             app.UseAuthorization();
