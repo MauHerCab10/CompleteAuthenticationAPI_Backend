@@ -2,7 +2,6 @@
 
 namespace CompleteAuthenticationAPI.Middleware
 {
-    // OPCIÓN 1: Usando Middleware personalizado
     public class SessionTimeoutMiddleware
     {
         private readonly RequestDelegate _next;
